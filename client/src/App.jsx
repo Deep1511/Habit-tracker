@@ -28,9 +28,8 @@ import DayModal from "./components/DayModal";
 import Sidebar from "./components/Sidebar";
 
 export default function App() {
-  // ── State ──────────────────────────────────────────────────
   const [birthdayDate, setBirthdayDate] = useState("");
-  const [monthData, setMonthData] = useState({}); // { 'YYYY-MM-DD': { habits, sleepHours, craftMinutes } }
+  const [monthData, setMonthData] = useState({});
   const [streaks, setStreaks] = useState({});
   const [craftTotal, setCraftTotal] = useState(0);
   const [activeMonth, setActiveMonth] = useState(0);
@@ -41,7 +40,6 @@ export default function App() {
 
   const months = getThreeMonths();
 
-  // ── Toast helper ───────────────────────────────────────────
   const showToast = useCallback((message, type = "info") => {
     const id = Date.now();
     setToasts((prev) => [...prev, { id, message, type }]);
@@ -51,7 +49,6 @@ export default function App() {
     );
   }, []);
 
-  // ── Load data ──────────────────────────────────────────────
   const loadMonth = useCallback(async (monthKey) => {
     try {
       const data = await getMonthHabits(monthKey);
@@ -97,73 +94,141 @@ export default function App() {
     loadAll();
   }, [loadAll]);
 
-  // ── Switch month ───────────────────────────────────────────
   const switchMonth = async (idx) => {
     setActiveMonth(idx);
     await loadMonth(months[idx].key);
   };
 
-  // ── Toggle habit (optimistic update) ───────────────────────
-  const toggleHabit = async (dateStr, key) => {
+  // ── Helper: build full day data object ────────────────────
+  const buildDayPayload = (dateStr, overrides = {}) => {
     const current = monthData[dateStr] || {
       date: dateStr,
       habits: {},
       sleepHours: null,
       craftMinutes: null,
     };
-    const newHabits = { ...current.habits, [key]: !current.habits[key] };
-    const updated = { ...current, habits: newHabits };
+    return {
+      habits: overrides.habits ?? current.habits ?? {},
+      sleepHours: overrides.sleepHours ?? current.sleepHours ?? null,
+      craftMinutes: overrides.craftMinutes ?? current.craftMinutes ?? null,
+      timeChanges: overrides.timeChanges ?? current.timeChanges ?? {},
+      lateEntries: overrides.lateEntries ?? current.lateEntries ?? {},
+    };
+  };
 
-    // Optimistic update
-    setMonthData((prev) => ({ ...prev, [dateStr]: updated }));
-
+  // ── Optimistic save helper ────────────────────────────────
+  const optimisticSave = async (dateStr, newDayData) => {
+    setMonthData((prev) => ({
+      ...prev,
+      [dateStr]: { ...newDayData, date: dateStr },
+    }));
     try {
-      await upsertDay(dateStr, {
-        habits: newHabits,
-        sleepHours: current.sleepHours,
-        craftMinutes: current.craftMinutes,
-      });
-      // Refresh stats after a short delay
+      await upsertDay(dateStr, newDayData);
       setTimeout(loadStats, 300);
-
-      // Check all done
-      const sched = getSchedule(dateStr, birthdayDate);
-      const trackable = sched.blocks.filter((b) => b.key);
-      if (trackable.every((b) => newHabits[b.key])) {
-        showToast("All habits completed!", "success");
-      }
     } catch (err) {
-      // Revert on error
-      setMonthData((prev) => ({ ...prev, [dateStr]: current }));
+      // Revert
+      setMonthData((prev) => {
+        const reverted = { ...prev };
+        delete reverted[dateStr];
+        return reverted;
+      });
       showToast("Failed to save — check server", "warn");
     }
   };
 
-  // ── Update sleep/craft fields ──────────────────────────────
-  const updateDayField = async (dateStr, field, value) => {
+  // ── Toggle habit (done on time) ──────────────────────────
+  const toggleHabit = async (dateStr, key) => {
     const current = monthData[dateStr] || {
-      date: dateStr,
       habits: {},
-      sleepHours: null,
-      craftMinutes: null,
+      timeChanges: {},
+      lateEntries: {},
     };
-    const updated = { ...current, [field]: value };
-    setMonthData((prev) => ({ ...prev, [dateStr]: updated }));
+    const newHabits = { ...current.habits, [key]: !current.habits[key] };
+    // If unchecking, also remove any late entry for this key
+    const newLate = { ...(current.lateEntries || {}) };
+    if (!newHabits[key]) delete newLate[key];
+    const payload = buildDayPayload(dateStr, {
+      habits: newHabits,
+      lateEntries: newLate,
+    });
+    await optimisticSave(dateStr, payload);
 
-    try {
-      await upsertDay(dateStr, {
-        habits: current.habits,
-        sleepHours: field === "sleepHours" ? value : current.sleepHours,
-        craftMinutes: field === "craftMinutes" ? value : current.craftMinutes,
-      });
-      if (field === "craftMinutes") setTimeout(loadStats, 300);
-    } catch (err) {
-      setMonthData((prev) => ({ ...prev, [dateStr]: current }));
-      showToast("Failed to save", "warn");
+    // Check all done
+    const sched = getSchedule(dateStr, birthdayDate);
+    const trackable = sched.blocks.filter((b) => b.key);
+    if (trackable.every((b) => newHabits[b.key])) {
+      showToast("All habits completed!", "success");
     }
   };
 
-  // ── Change birthday date ───────────────────────────────────
+  // ── Mark done late ───────────────────────────────────────
+  const markDoneLate = async (dateStr, key, actualTime, reason) => {
+    const current = monthData[dateStr] || {
+      habits: {},
+      timeChanges: {},
+      lateEntries: {},
+    };
+    const newHabits = { ...current.habits, [key]: true };
+    const newLate = {
+      ...(current.lateEntries || {}),
+      [key]: { actualTime, reason },
+    };
+    const payload = buildDayPayload(dateStr, {
+      habits: newHabits,
+      lateEntries: newLate,
+    });
+    await optimisticSave(dateStr, payload);
+    showToast(`Marked done at ${actualTime}`, "info");
+
+    const sched = getSchedule(dateStr, birthdayDate);
+    const trackable = sched.blocks.filter((b) => b.key);
+    if (trackable.every((b) => newHabits[b.key])) {
+      showToast("All habits completed!", "success");
+    }
+  };
+
+  // ── Remove late entry (revert to normal done) ────────────
+  const removeLateEntry = async (dateStr, key) => {
+    const current = monthData[dateStr] || {
+      habits: {},
+      timeChanges: {},
+      lateEntries: {},
+    };
+    const newLate = { ...(current.lateEntries || {}) };
+    delete newLate[key];
+    const payload = buildDayPayload(dateStr, { lateEntries: newLate });
+    await optimisticSave(dateStr, payload);
+  };
+
+  // ── Update time override ─────────────────────────────────
+  const updateTimeOverride = async (dateStr, key, newTime) => {
+    const current = monthData[dateStr] || {
+      habits: {},
+      timeChanges: {},
+      lateEntries: {},
+    };
+    const newTC = { ...(current.timeChanges || {}) };
+    if (
+      newTime &&
+      newTime !==
+        getSchedule(dateStr, birthdayDate).blocks.find((b) => b.key === key)
+          ?.time
+    ) {
+      newTC[key] = newTime;
+    } else {
+      delete newTC[key]; // Revert to default
+    }
+    const payload = buildDayPayload(dateStr, { timeChanges: newTC });
+    await optimisticSave(dateStr, payload);
+  };
+
+  // ── Update sleep/craft fields ────────────────────────────
+  const updateDayField = async (dateStr, field, value) => {
+    const payload = buildDayPayload(dateStr, { [field]: value });
+    await optimisticSave(dateStr, payload);
+  };
+
+  // ── Change birthday date ─────────────────────────────────
   const changeBirthday = async (newDate) => {
     setBirthdayDate(newDate);
     try {
@@ -173,7 +238,7 @@ export default function App() {
     }
   };
 
-  // ── Reset all data ─────────────────────────────────────────
+  // ── Reset all data ───────────────────────────────────────
   const handleReset = async () => {
     try {
       await resetAllHabits();
@@ -187,7 +252,7 @@ export default function App() {
     }
   };
 
-  // ── Keyboard ───────────────────────────────────────────────
+  // ── Keyboard ─────────────────────────────────────────────
   useEffect(() => {
     const handler = (e) => {
       if (e.key === "Escape") {
@@ -199,13 +264,12 @@ export default function App() {
     return () => window.removeEventListener("keydown", handler);
   }, [showReset, modalDate]);
 
-  // ── Derived values ─────────────────────────────────────────
+  // ── Derived values ───────────────────────────────────────
   const daysLeft = birthdayDate ? daysUntilBirthday(birthdayDate) : 0;
   const isMissionMode = daysLeft > 0;
   const todayStr = fmtDate(new Date());
   const todaySched = birthdayDate ? getSchedule(todayStr, birthdayDate) : null;
 
-  // ── Loading state ──────────────────────────────────────────
   if (loading || !birthdayDate) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -217,7 +281,6 @@ export default function App() {
     );
   }
 
-  // ── Render ─────────────────────────────────────────────────
   return (
     <>
       {/* Toasts */}
@@ -264,12 +327,6 @@ export default function App() {
                   <div className="text-bark-muted text-sm font-medium">
                     Birthday passed
                   </div>
-                  <div className="text-xs text-bark-light">
-                    {parseDate(birthdayDate).toLocaleDateString("en-US", {
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </div>
                 </>
               ) : daysLeft === 0 ? (
                 <div className="countdown-num font-display font-black text-4xl text-gold leading-none">
@@ -281,7 +338,7 @@ export default function App() {
                     {daysLeft}
                   </div>
                   <div className="text-sm font-semibold text-bark-muted">
-                    days until birthday
+                    days left
                   </div>
                 </>
               )}
@@ -302,17 +359,15 @@ export default function App() {
       </header>
 
       {/* MODE BANNER */}
-      {isMissionMode && (
+      {isMissionMode ? (
         <div className="bg-terra text-white text-center py-2 text-sm font-bold tracking-wide">
-          <i className="fa-solid fa-bolt mr-2"></i>
-          MISSION MODE — 6hr sleep, maximum craft time — {daysLeft} days
-          remaining
+          <i className="fa-solid fa-bolt mr-2"></i>MISSION MODE — 6hr sleep,
+          maximum craft time — {daysLeft} days remaining
         </div>
-      )}
-      {!isMissionMode && (
+      ) : (
         <div className="bg-teal text-white text-center py-2 text-sm font-bold tracking-wide">
-          <i className="fa-solid fa-leaf mr-2"></i>
-          RECOVERY MODE — Normal sleep schedule restored
+          <i className="fa-solid fa-leaf mr-2"></i>RECOVERY MODE — Normal sleep
+          schedule restored
         </div>
       )}
 
@@ -348,20 +403,28 @@ export default function App() {
           <div className="flex gap-2.5 overflow-x-auto pb-2 -mx-1 px-1">
             {todaySched?.blocks.map((b, i) => {
               const cs = CAT_STYLES[b.cat] || CAT_STYLES.routine;
-              const checked = b.key
-                ? !!monthData[todayStr]?.habits?.[b.key]
-                : null;
+              const dayD = monthData[todayStr];
+              const checked = b.key ? !!dayD?.habits?.[b.key] : null;
+              const lateInfo = b.key ? dayD?.lateEntries?.[b.key] : null;
+              const overriddenTime = b.key ? dayD?.timeChanges?.[b.key] : null;
+              const displayTime = overriddenTime || b.time;
               const isHigh =
-                b.cat === "gov" || b.cat === "craft" || b.cat === "pooja";
+                b.cat === "gov" ||
+                b.cat === "craft" ||
+                b.cat === "pooja" ||
+                b.cat === "exercise";
               return (
                 <div
                   key={i}
-                  className={`tl-card flex-shrink-0 w-[155px] ${cs.bg} ${cs.border} border rounded-xl p-3 ${isHigh ? "ring-1 ring-terra/10" : ""}`}
+                  className={`tl-card flex-shrink-0 w-[160px] ${cs.bg} ${cs.border} border rounded-xl p-3 ${isHigh ? "ring-1 ring-terra/10" : ""} ${lateInfo ? "ring-1 ring-gold/40" : ""}`}
                 >
                   <div
-                    className={`text-[10px] font-bold ${cs.text} uppercase tracking-wider mb-1`}
+                    className={`text-[10px] font-bold ${cs.text} uppercase tracking-wider mb-1 flex items-center gap-1`}
                   >
-                    {b.time}
+                    {displayTime}
+                    {overriddenTime && (
+                      <i className="fa-solid fa-pen text-[7px] text-bark-light"></i>
+                    )}
                   </div>
                   <div
                     className={`text-xs font-medium leading-snug ${b.key && checked ? "line-through opacity-60" : ""}`}
@@ -382,10 +445,16 @@ export default function App() {
                         onChange={() => toggleHabit(todayStr, b.key)}
                       />
                       <span
-                        className={`text-[10px] ${checked ? "text-mint font-bold" : "text-bark-light"}`}
+                        className={`text-[10px] ${checked ? (lateInfo ? "text-gold-dark font-bold" : "text-mint font-bold") : "text-bark-light"}`}
                       >
-                        {checked ? "Done" : "Track"}
+                        {checked ? (lateInfo ? `Late` : "Done") : "Track"}
                       </span>
+                    </div>
+                  )}
+                  {lateInfo && (
+                    <div className="mt-1.5 text-[9px] text-gold-dark font-medium leading-tight">
+                      <i class="fa-solid fa-clock mr-0.5"></i>
+                      {lateInfo.actualTime} — {lateInfo.reason}
                     </div>
                   )}
                 </div>
@@ -421,6 +490,9 @@ export default function App() {
           birthdayDate={birthdayDate}
           dayData={monthData[modalDate] || null}
           onToggle={toggleHabit}
+          onMarkLate={markDoneLate}
+          onRemoveLate={removeLateEntry}
+          onTimeChange={updateTimeOverride}
           onUpdateField={updateDayField}
           onClose={() => setModalDate(null)}
         />
@@ -441,8 +513,8 @@ export default function App() {
             Reset All Data?
           </h3>
           <p className="text-bark-muted text-sm mb-5">
-            This will clear all your habit tracking data, streaks, and logged
-            hours from the database. This cannot be undone.
+            This will clear all tracking data, time changes, late entries, and
+            logged hours from the database.
           </p>
           <div className="flex gap-3">
             <button

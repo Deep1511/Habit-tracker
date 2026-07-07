@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   getSchedule,
   parseDate,
@@ -6,11 +7,24 @@ import {
   daysUntilBirthday,
 } from "../scheduleData";
 
+const QUICK_REASONS = [
+  "Woke up late",
+  "Office overtime",
+  "Felt tired / unwell",
+  "Family matter",
+  "Commute delay",
+  "Got busy with something",
+  "Other",
+];
+
 export default function DayModal({
   dateStr,
   birthdayDate,
   dayData,
   onToggle,
+  onMarkLate,
+  onRemoveLate,
+  onTimeChange,
   onUpdateField,
   onClose,
 }) {
@@ -24,8 +38,69 @@ export default function DayModal({
     year: "numeric",
   });
   const habits = dayData?.habits || {};
+  const timeChanges = dayData?.timeChanges || {};
+  const lateEntries = dayData?.lateEntries || {};
   const trackable = sched.blocks.filter((b) => b.key);
   const doneCount = trackable.filter((b) => habits[b.key]).length;
+
+  // UI state
+  const [editingTime, setEditingTime] = useState(null); // habit key being time-edited
+  const [timeInput, setTimeInput] = useState(""); // temp value for time input
+  const [lateForm, setLateForm] = useState(null); // habit key with late form open
+  const [lateTime, setLateTime] = useState("");
+  const [lateReason, setLateReason] = useState("");
+  const [lateCustomReason, setLateCustomReason] = useState("");
+
+  // ── Time editing ──────────────────────────────────────────
+  const startEditTime = (key, currentDisplayTime) => {
+    setEditingTime(key);
+    setTimeInput(currentDisplayTime);
+  };
+
+  const saveTimeEdit = (key) => {
+    if (timeInput.trim()) {
+      onTimeChange(dateStr, key, timeInput.trim());
+    }
+    setEditingTime(null);
+    setTimeInput("");
+  };
+
+  const cancelTimeEdit = () => {
+    setEditingTime(null);
+    setTimeInput("");
+  };
+
+  // ── Late form ─────────────────────────────────────────────
+  const openLateForm = (key) => {
+    setLateForm(key);
+    setLateTime("");
+    setLateReason("");
+    setLateCustomReason("");
+  };
+
+  const submitLate = (key) => {
+    const finalReason =
+      lateReason === "Other" ? lateCustomReason.trim() : lateReason;
+    if (!lateTime.trim() || !finalReason) return;
+    onMarkLate(dateStr, key, lateTime.trim(), finalReason);
+    setLateForm(null);
+    setLateTime("");
+    setLateReason("");
+    setLateCustomReason("");
+  };
+
+  const cancelLate = () => {
+    setLateForm(null);
+    setLateTime("");
+    setLateReason("");
+    setLateCustomReason("");
+  };
+
+  // ── Get display time for a block ──────────────────────────
+  const getDisplayTime = (block) => {
+    if (block.key && timeChanges[block.key]) return timeChanges[block.key];
+    return block.time;
+  };
 
   return (
     <div
@@ -55,10 +130,18 @@ export default function DayModal({
               <i className="fa-solid fa-xmark"></i>
             </button>
           </div>
+          {!future && (
+            <p className="text-[11px] text-bark-light mt-2">
+              <i className="fa-solid fa-pen-to-square mr-1"></i>Click any time
+              to reschedule it. Use{" "}
+              <i className="fa-solid fa-clock text-gold-dark"></i> to log
+              done-late with reason.
+            </p>
+          )}
         </div>
 
         {/* Body */}
-        <div className="px-5 py-4 overflow-y-auto flex-1">
+        <div className="px-5 py-4 overflow-y-auto flex-0.5">
           {future && (
             <div className="text-center py-6 mb-4">
               <div className="w-14 h-14 rounded-full bg-cream-dark flex items-center justify-center mx-auto mb-3">
@@ -68,7 +151,7 @@ export default function DayModal({
                 This day hasn't come yet
               </p>
               <p className="text-xs text-bark-light mt-1">
-                Here's your planned schedule:
+                Your planned schedule (times are editable):
               </p>
             </div>
           )}
@@ -77,56 +160,227 @@ export default function DayModal({
             {sched.blocks.map((b, i) => {
               const cs = CAT_STYLES[b.cat] || CAT_STYLES.routine;
               const checked = b.key ? !!habits[b.key] : null;
+              const lateInfo = b.key ? lateEntries[b.key] : null;
+              const overriddenTime = b.key ? timeChanges[b.key] : null;
+              const displayTime = getDisplayTime(b);
               const isHigh =
-                b.cat === "gov" || b.cat === "craft" || b.cat === "pooja";
+                b.cat === "gov" ||
+                b.cat === "craft" ||
+                b.cat === "pooja" ||
+                b.cat === "exercise";
+              const isLateFormOpen = lateForm === b.key;
+              const isTimeEditing = editingTime === b.key;
 
               return (
-                <div
-                  key={i}
-                  className={`flex items-center gap-3 ${cs.bg} ${cs.border} border rounded-xl px-3 py-2.5 ${isHigh ? "ring-1 ring-terra/8" : ""}`}
-                >
-                  {b.key ? (
-                    <input
-                      type="checkbox"
-                      className="habit-cb"
-                      checked={!!checked}
-                      disabled={future}
-                      onChange={() => onToggle(dateStr, b.key)}
-                    />
-                  ) : (
-                    <div className="w-6"></div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`text-[10px] font-bold ${cs.text} uppercase tracking-wider w-16 flex-shrink-0`}
-                      >
-                        {b.time}
-                      </span>
+                <div key={i}>
+                  {/* Main block row */}
+                  <div
+                    className={`flex items-center gap-3 ${cs.bg} ${cs.border} border rounded-xl px-3 py-2.5 ${isHigh ? "ring-1 ring-terra/8" : ""} ${lateInfo ? "ring-1 ring-gold/40 bg-gold-pale/50" : ""}`}
+                  >
+                    {/* Checkbox */}
+                    {b.key ? (
+                      <input
+                        type="checkbox"
+                        className="habit-cb"
+                        checked={!!checked}
+                        disabled={future}
+                        onChange={() => toggleHabit(dateStr, b.key)}
+                      />
+                    ) : (
+                      <div className="w-6"></div>
+                    )}
+
+                    {/* Time — editable */}
+                    <div className="w-[72px] flex-shrink-0">
+                      {b.key && (isTimeEditing || future) ? (
+                        <input
+                          type="text"
+                          value={timeInput}
+                          onChange={(e) => setTimeInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") saveTimeEdit(b.key);
+                            if (e.key === "Escape") cancelTimeEdit();
+                          }}
+                          onBlur={() => saveTimeEdit(b.key)}
+                          autoFocus
+                          className="w-full text-[10px] font-bold text-bark bg-white border border-cream-deep rounded px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-terra/30 uppercase tracking-wider"
+                          placeholder={b.time}
+                        />
+                      ) : (
+                        <button
+                          onClick={() =>
+                            b.key && startEditTime(b.key, displayTime)
+                          }
+                          className={`text-[10px] font-bold ${cs.text} uppercase tracking-wider hover:underline underline-offset-2 decoration-dotted text-left flex items-center gap-1 ${b.key ? "cursor-pointer" : "cursor-default"}`}
+                          title={b.key ? "Click to change time" : ""}
+                        >
+                          {displayTime}
+                          {b.key && overriddenTime && (
+                            <i className="fa-solid fa-pen text-[7px] text-bark-light no-underline"></i>
+                          )}
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Label */}
+                    <div className="flex-1 min-w-0">
                       <span
                         className={`text-xs font-medium ${b.key && checked ? "line-through opacity-50" : ""}`}
                       >
                         {b.label}
                       </span>
                     </div>
+
+                    {/* Duration */}
+                    {b.dur && (
+                      <span className="text-[10px] text-bark-light font-medium flex-shrink-0">
+                        {b.dur}
+                      </span>
+                    )}
+
+                    {/* Category icon */}
+                    {b.cat === "exercise" && (
+                      <i className="fa-solid fa-dumbbell text-terra-light/30 text-xs flex-shrink-0"></i>
+                    )}
+                    {b.cat === "pooja" && (
+                      <i className="fa-solid fa-om text-terra/30 text-xs flex-shrink-0"></i>
+                    )}
+                    {b.cat === "gov" && (
+                      <i className="fa-solid fa-book text-terra/30 text-xs flex-shrink-0"></i>
+                    )}
+                    {b.cat === "genai" && (
+                      <i className="fa-solid fa-robot text-teal/30 text-xs flex-shrink-0"></i>
+                    )}
+                    {b.cat === "craft" && (
+                      <i className="fa-solid fa-palette text-gold/30 text-xs flex-shrink-0"></i>
+                    )}
                   </div>
-                  {b.dur && (
-                    <span className="text-[10px] text-bark-light font-medium flex-shrink-0">
-                      {b.dur}
-                    </span>
+
+                  {/* Late info bar (shown when habit was done late) */}
+                  {lateInfo && !future && (
+                    <div className="ml-9 mr-3 mt-0.5 mb-1 flex items-center justify-between">
+                      <span className="text-[11px] text-gold-dark font-medium">
+                        <i className="fa-solid fa-clock mr-1"></i>
+                        Done at {lateInfo.actualTime} — {lateInfo.reason}
+                      </span>
+                      <button
+                        onClick={() => onRemoveLate(dateStr, b.key)}
+                        className="text-[10px] text-bark-light hover:text-terra transition-colors"
+                        title="Remove late entry"
+                      >
+                        <i className="fa-solid fa-xmark"></i>
+                      </button>
+                    </div>
                   )}
-                  {b.cat === "pooja" && (
-                    <i className="fa-solid fa-om text-terra-light/30 text-xs"></i>
+
+                  {/* Late form (expandable) */}
+                  {isLateFormOpen && !future && (
+                    <div className="ml-9 mr-3 mt-1 mb-1 bg-gold-pale border border-gold/20 rounded-xl p-3 space-y-2.5">
+                      <div className="text-[11px] font-bold text-gold-dark uppercase tracking-wider">
+                        <i className="fa-solid fa-clock mr-1"></i>Done Late —
+                        Log Details
+                      </div>
+
+                      {/* Actual time */}
+                      <div>
+                        <label className="text-[10px] text-bark-muted font-semibold block mb-1">
+                          When did you actually do it?
+                        </label>
+                        <input
+                          type="text"
+                          value={lateTime}
+                          onChange={(e) => setLateTime(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") submitLate(b.key);
+                          }}
+                          placeholder="e.g. 7:30 AM"
+                          className="w-full text-xs border border-cream-deep rounded-lg px-2.5 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold font-medium"
+                          autoFocus
+                        />
+                      </div>
+
+                      {/* Quick reasons */}
+                      <div>
+                        <label className="text-[10px] text-bark-muted font-semibold block mb-1.5">
+                          Why?
+                        </label>
+                        <div className="flex flex-wrap gap-1.5">
+                          {QUICK_REASONS.map((r) => (
+                            <button
+                              key={r}
+                              onClick={() => setLateReason(r)}
+                              className={`text-[10px] px-2.5 py-1 rounded-full border font-medium transition-all ${
+                                lateReason === r
+                                  ? "bg-gold text-white border-gold"
+                                  : "bg-white border-cream-deep text-bark-muted hover:border-gold hover:text-gold-dark"
+                              }`}
+                            >
+                              {r}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Custom reason input */}
+                      {lateReason === "Other" && (
+                        <input
+                          type="text"
+                          value={lateCustomReason}
+                          onChange={(e) => setLateCustomReason(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") submitLate(b.key);
+                          }}
+                          placeholder="Type your reason..."
+                          className="w-full text-xs border border-cream-deep rounded-lg px-2.5 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold font-medium"
+                          autoFocus
+                        />
+                      )}
+
+                      {/* Save / Cancel */}
+                      <div className="flex gap-2 pt-1">
+                        <button
+                          onClick={() => submitLate(b.key)}
+                          disabled={
+                            !lateTime.trim() ||
+                            !lateReason ||
+                            (lateReason === "Other" && !lateCustomReason.trim())
+                          }
+                          className="flex-1 text-[11px] font-bold py-2 rounded-lg bg-gold text-white hover:bg-gold-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          <i className="fa-solid fa-check mr-1"></i>Save
+                        </button>
+                        <button
+                          onClick={cancelLate}
+                          className="px-3 text-[11px] font-bold py-2 rounded-lg border border-cream-deep text-bark-muted hover:bg-cream transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
                   )}
-                  {b.cat === "gov" && (
-                    <i className="fa-solid fa-book text-terra/30 text-xs"></i>
-                  )}
-                  {b.cat === "genai" && (
-                    <i className="fa-solid fa-robot text-teal/30 text-xs"></i>
-                  )}
-                  {b.cat === "craft" && (
-                    <i className="fa-solid fa-palette text-gold/30 text-xs"></i>
-                  )}
+
+                  {/* Action buttons for unchecked trackable habits */}
+                  {b.key &&
+                    !checked &&
+                    !lateInfo &&
+                    !isLateFormOpen &&
+                    !future && (
+                      <div className="ml-9 mr-3 mt-0.5 mb-1 flex gap-2">
+                        <button
+                          onClick={() => onToggle(dateStr, b.key)}
+                          className="text-[10px] text-mint font-semibold hover:underline"
+                        >
+                          <i className="fa-solid fa-check mr-0.5"></i>Done on
+                          time
+                        </button>
+                        <button
+                          onClick={() => openLateForm(b.key)}
+                          className="text-[10px] text-gold-dark font-semibold hover:underline"
+                        >
+                          <i className="fa-solid fa-clock mr-0.5"></i>Done late
+                        </button>
+                      </div>
+                    )}
                 </div>
               );
             })}
@@ -223,6 +477,11 @@ export default function DayModal({
             <div className="flex items-center justify-between">
               <div className="text-xs text-bark-muted">
                 {doneCount}/{trackable.length} habits completed
+                {Object.keys(lateEntries).length > 0 && (
+                  <span className="text-gold-dark ml-1">
+                    ({Object.keys(lateEntries).length} late)
+                  </span>
+                )}
               </div>
               <button
                 onClick={onClose}
