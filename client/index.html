@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Habit Tracker — Birthday Countdown</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              cream: { DEFAULT: "#FDF6EE", dark: "#F0E4D4", deep: "#E6D5C1" },
+              terra: {
+                DEFAULT: "#C2410C",
+                light: "#EA580C",
+                pale: "#FFF1E6",
+                dark: "#7C2D12",
+              },
+              gold: {
+                DEFAULT: "#D97706",
+                light: "#F59E0B",
+                pale: "#FEF9EE",
+                dark: "#92400E",
+              },
+              bark: { DEFAULT: "#2C1810", muted: "#8B7355", light: "#A8917A" },
+              teal: { DEFAULT: "#0F766E", light: "#14B8A6", pale: "#F0FDFA" },
+              mint: { DEFAULT: "#15803D", light: "#22C55E", pale: "#DCFCE7" },
+            },
+            fontFamily: {
+              display: ["Fraunces", "serif"],
+              body: ['"DM Sans"', "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700;9..144,900&family=DM+Sans:opsz,wght@9..40,300..700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+  </head>
+  <body class="bg-cream text-bark min-h-screen font-body">
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

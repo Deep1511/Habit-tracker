@@ -1,0 +1,242 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Paper texture overlay */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.4;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+}
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Custom checkbox */
+.habit-cb {
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border: 2.5px solid #e6d5c1;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  position: relative;
+  background: #fff;
+}
+.habit-cb:hover {
+  border-color: #c2410c;
+  box-shadow: 0 0 0 3px rgba(194, 65, 12, 0.1);
+}
+.habit-cb:checked {
+  background: #c2410c;
+  border-color: #c2410c;
+}
+.habit-cb:checked::after {
+  content: "✓";
+  position: absolute;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.habit-cb:checked::after {
+  transform: translate(-50%, -50%) scale(1);
+}
+.habit-cb:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.habit-cb:disabled:hover {
+  border-color: #e6d5c1;
+  box-shadow: none;
+}
+
+/* Small checkbox for timeline */
+.habit-cb-sm {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border-width: 2px;
+}
+.habit-cb-sm:checked::after {
+  font-size: 11px;
+}
+
+/* Calendar cell */
+.cal-day {
+  transition: all 0.15s ease;
+  cursor: pointer;
+  min-height: 72px;
+}
+.cal-day:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(44, 24, 16, 0.08);
+}
+.cal-day.today {
+  box-shadow:
+    0 0 0 2.5px #c2410c,
+    0 4px 12px rgba(194, 65, 12, 0.15);
+}
+.cal-day.birthday {
+  box-shadow:
+    0 0 0 2.5px #d97706,
+    0 0 20px rgba(217, 119, 6, 0.25);
+}
+.cal-day.all-done {
+  background: linear-gradient(135deg, #dcfce7 0%, #f0fdf4 100%) !important;
+}
+.cal-day.future {
+  opacity: 0.55;
+}
+
+/* Habit dots */
+.hdot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+.hdot.off {
+  background: #e6d5c1;
+}
+.hdot.pooja-on {
+  background: #ea580c;
+  box-shadow: 0 0 4px rgba(234, 88, 12, 0.4);
+}
+.hdot.gov-on {
+  background: #c2410c;
+  box-shadow: 0 0 4px rgba(194, 65, 12, 0.4);
+}
+.hdot.genai-on {
+  background: #0f766e;
+  box-shadow: 0 0 4px rgba(15, 118, 110, 0.4);
+}
+.hdot.craft-on {
+  background: #d97706;
+  box-shadow: 0 0 4px rgba(217, 119, 6, 0.4);
+}
+.hdot.sleep-on {
+  background: #15803d;
+  box-shadow: 0 0 4px rgba(21, 128, 61, 0.4);
+}
+
+/* Modal */
+.modal-overlay {
+  transition: opacity 0.25s ease;
+}
+.modal-panel {
+  transition:
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.25s ease;
+}
+.modal-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+.modal-overlay.hidden .modal-panel {
+  transform: translateY(30px) scale(0.97);
+  opacity: 0;
+}
+
+/* Month tab */
+.month-tab {
+  transition: all 0.2s;
+}
+.month-tab.active {
+  background: #2c1810;
+  color: #fdf6ee;
+}
+
+/* Countdown pulse */
+@keyframes softPulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.03);
+  }
+}
+.countdown-num {
+  animation: softPulse 3s ease-in-out infinite;
+}
+
+/* Phase bar */
+.phase-bar {
+  height: 8px;
+  border-radius: 4px;
+  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Timeline card */
+.tl-card {
+  transition: all 0.15s;
+}
+.tl-card:hover {
+  transform: translateY(-1px);
+}
+
+/* Streak flame */
+@keyframes flicker {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.15);
+  }
+}
+.flame {
+  animation: flicker 1.2s ease-in-out infinite;
+  display: inline-block;
+  transform-origin: bottom;
+}
+
+/* Toast */
+.toast {
+  transform: translateY(-20px);
+  opacity: 0;
+  transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.toast.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #e6d5c1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a8917a;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
