@@ -1,5 +1,5 @@
 // const API = "/api";
-const API = "https://habit-tracker-n269.onrender.com";
+const API = "https://habit-tracker-n269.onrender.com/api";
 
 // ── Settings ─────────────────────────────────────────────────
 
