@@ -10,13 +10,12 @@ import {
 } from "./api";
 import {
   getSchedule,
-  getDayType,
+  getDayTasks,
   fmtDate,
-  parseDate,
   isToday,
   isFuture,
+  nowTimeStr,
   getThreeMonths,
-  getMonthGrid,
   daysUntilBirthday,
   getHabitSummary,
   CRAFT_PHASES,
@@ -26,7 +25,7 @@ import {
 import Calendar from "./components/Calendar";
 import DayModal from "./components/DayModal";
 import Sidebar from "./components/Sidebar";
-
+import ExamTracker from "./components/ExamTracker";
 export default function App() {
   const [birthdayDate, setBirthdayDate] = useState("");
   const [monthData, setMonthData] = useState({});
@@ -37,7 +36,6 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [toasts, setToasts] = useState([]);
   const [showReset, setShowReset] = useState(false);
-
   const months = getThreeMonths();
 
   const showToast = useCallback((message, type = "info") => {
@@ -49,16 +47,14 @@ export default function App() {
     );
   }, []);
 
-  const loadMonth = useCallback(async (monthKey) => {
+  const loadMonth = useCallback(async (mk) => {
     try {
-      const data = await getMonthHabits(monthKey);
-      const map = {};
-      data.forEach((d) => {
-        map[d.date] = d;
-      });
-      setMonthData(map);
-    } catch (err) {
-      console.error("Failed to load month:", err);
+      const d = await getMonthHabits(mk);
+      const m = {};
+      d.forEach((x) => (m[x.date] = x));
+      setMonthData(m);
+    } catch (e) {
+      console.error(e);
     }
   }, []);
 
@@ -67,24 +63,24 @@ export default function App() {
       const [s, c] = await Promise.all([getStreaks(), getCraftTotal()]);
       setStreaks(s);
       setCraftTotal(c.totalMinutes || 0);
-    } catch (err) {
-      console.error("Failed to load stats:", err);
+    } catch (e) {
+      console.error(e);
     }
   }, []);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
     try {
-      const settings = await getSettings();
-      setBirthdayDate(settings.birthdayDate);
-      const m = getThreeMonths();
-      const todayMonth = new Date().getMonth();
-      const idx = m.findIndex((x) => x.month === todayMonth);
+      const s = await getSettings();
+      setBirthdayDate(s.birthdayDate);
+      const m = getThreeMonths(),
+        tm = new Date().getMonth(),
+        idx = m.findIndex((x) => x.month === tm);
       setActiveMonth(idx >= 0 ? idx : 0);
       await loadMonth(m[idx >= 0 ? idx : 0].key);
       await loadStats();
-    } catch (err) {
-      console.error("Init error:", err);
+    } catch (e) {
+      console.error(e);
     } finally {
       setLoading(false);
     }
@@ -93,152 +89,158 @@ export default function App() {
   useEffect(() => {
     loadAll();
   }, [loadAll]);
-
-  const switchMonth = async (idx) => {
-    setActiveMonth(idx);
-    await loadMonth(months[idx].key);
+  const switchMonth = async (i) => {
+    setActiveMonth(i);
+    await loadMonth(months[i].key);
   };
 
-  // ── Helper: build full day data object ────────────────────
-  const buildDayPayload = (dateStr, overrides = {}) => {
-    const current = monthData[dateStr] || {
-      date: dateStr,
-      habits: {},
-      sleepHours: null,
-      craftMinutes: null,
-    };
+  // ── Build full payload ────────────────────────────────────
+  const buildPayload = (ds, ov = {}) => {
+    const c = monthData[ds] || {};
     return {
-      habits: overrides.habits ?? current.habits ?? {},
-      sleepHours: overrides.sleepHours ?? current.sleepHours ?? null,
-      craftMinutes: overrides.craftMinutes ?? current.craftMinutes ?? null,
-      timeChanges: overrides.timeChanges ?? current.timeChanges ?? {},
-      lateEntries: overrides.lateEntries ?? current.lateEntries ?? {},
+      habits: ov.habits ?? c.habits ?? {},
+      sleepHours: ov.sleepHours ?? c.sleepHours ?? null,
+      craftMinutes: ov.craftMinutes ?? c.craftMinutes ?? null,
+      taskOrder: ov.taskOrder ?? c.taskOrder ?? null,
+      customTasks: ov.customTasks ?? c.customTasks ?? null,
+      pinnedTimes: ov.pinnedTimes ?? c.pinnedTimes ?? null,
+      lateEntries: ov.lateEntries ?? c.lateEntries ?? {},
     };
   };
 
-  // ── Optimistic save helper ────────────────────────────────
-  const optimisticSave = async (dateStr, newDayData) => {
-    setMonthData((prev) => ({
-      ...prev,
-      [dateStr]: { ...newDayData, date: dateStr },
-    }));
+  // ── Optimistic save ───────────────────────────────────────
+  const save = async (ds, payload) => {
+    setMonthData((prev) => ({ ...prev, [ds]: { ...payload, date: ds } }));
     try {
-      await upsertDay(dateStr, newDayData);
+      await upsertDay(ds, payload);
       setTimeout(loadStats, 300);
-    } catch (err) {
-      // Revert
+    } catch (e) {
       setMonthData((prev) => {
-        const reverted = { ...prev };
-        delete reverted[dateStr];
-        return reverted;
+        const r = { ...prev };
+        delete r[ds];
+        return r;
       });
-      showToast("Failed to save — check server", "warn");
+      showToast("Save failed", "warn");
     }
   };
 
-  // ── Toggle habit (done on time) ──────────────────────────
-  const toggleHabit = async (dateStr, key) => {
-    const current = monthData[dateStr] || {
-      habits: {},
-      timeChanges: {},
-      lateEntries: {},
-    };
-    const newHabits = { ...current.habits, [key]: !current.habits[key] };
-    // If unchecking, also remove any late entry for this key
-    const newLate = { ...(current.lateEntries || {}) };
-    if (!newHabits[key]) delete newLate[key];
-    const payload = buildDayPayload(dateStr, {
-      habits: newHabits,
-      lateEntries: newLate,
-    });
-    await optimisticSave(dateStr, payload);
-
-    // Check all done
-    const sched = getSchedule(dateStr, birthdayDate);
-    const trackable = sched.blocks.filter((b) => b.key);
-    if (trackable.every((b) => newHabits[b.key])) {
+  // ── Habit actions ─────────────────────────────────────────
+  const toggleHabit = async (ds, key) => {
+    const c = monthData[ds] || {};
+    const h = { ...c.habits, [key]: !c.habits?.[key] };
+    const le = { ...c.lateEntries };
+    if (!h[key]) delete le[key];
+    await save(ds, buildPayload(ds, { habits: h, lateEntries: le }));
+    const tasks = getDayTasks(ds, birthdayDate, { ...c, habits: h });
+    if (tasks.filter((t) => t.trackable).every((t) => h[t.key]))
       showToast("All habits completed!", "success");
-    }
   };
 
-  // ── Mark done late ───────────────────────────────────────
-  const markDoneLate = async (dateStr, key, actualTime, reason) => {
-    const current = monthData[dateStr] || {
-      habits: {},
-      timeChanges: {},
-      lateEntries: {},
-    };
-    const newHabits = { ...current.habits, [key]: true };
-    const newLate = {
-      ...(current.lateEntries || {}),
-      [key]: { actualTime, reason },
-    };
-    const payload = buildDayPayload(dateStr, {
-      habits: newHabits,
-      lateEntries: newLate,
-    });
-    await optimisticSave(dateStr, payload);
+  const markDoneLate = async (ds, key, actualTime, reason) => {
+    const c = monthData[ds] || {};
+    const h = { ...c.habits, [key]: true };
+    const le = { ...c.lateEntries, [key]: { actualTime, reason } };
+    await save(ds, buildPayload(ds, { habits: h, lateEntries: le }));
     showToast(`Marked done at ${actualTime}`, "info");
-
-    const sched = getSchedule(dateStr, birthdayDate);
-    const trackable = sched.blocks.filter((b) => b.key);
-    if (trackable.every((b) => newHabits[b.key])) {
-      showToast("All habits completed!", "success");
-    }
   };
 
-  // ── Remove late entry (revert to normal done) ────────────
-  const removeLateEntry = async (dateStr, key) => {
-    const current = monthData[dateStr] || {
-      habits: {},
-      timeChanges: {},
-      lateEntries: {},
-    };
-    const newLate = { ...(current.lateEntries || {}) };
-    delete newLate[key];
-    const payload = buildDayPayload(dateStr, { lateEntries: newLate });
-    await optimisticSave(dateStr, payload);
+  const removeLateEntry = async (ds, key) => {
+    const c = monthData[ds] || {};
+    const le = { ...c.lateEntries };
+    delete le[key];
+    await save(ds, buildPayload(ds, { lateEntries: le }));
   };
 
-  // ── Update time override ─────────────────────────────────
-  const updateTimeOverride = async (dateStr, key, newTime) => {
-    const current = monthData[dateStr] || {
-      habits: {},
-      timeChanges: {},
-      lateEntries: {},
-    };
-    const newTC = { ...(current.timeChanges || {}) };
-    if (
-      newTime &&
-      newTime !==
-        getSchedule(dateStr, birthdayDate).blocks.find((b) => b.key === key)
-          ?.time
-    ) {
-      newTC[key] = newTime;
-    } else {
-      delete newTC[key]; // Revert to default
-    }
-    const payload = buildDayPayload(dateStr, { timeChanges: newTC });
-    await optimisticSave(dateStr, payload);
+  // ── Schedule manipulation actions ─────────────────────────
+  const insertTask = async (ds, afterKey, task) => {
+    const c = monthData[ds] || {};
+    const sched = getSchedule(ds, birthdayDate);
+    const order = c.taskOrder || sched.blocks.map((b) => b.key);
+    const custom = { ...c.customTasks };
+    const newKey = `custom_${Date.now()}`;
+    custom[newKey] = task;
+    const idx = order.indexOf(afterKey);
+    const newOrder = [...order];
+    newOrder.splice(idx + 1, 0, newKey);
+    await save(
+      ds,
+      buildPayload(ds, { taskOrder: newOrder, customTasks: custom }),
+    );
+    showToast("Task added — times reshuffled", "info");
   };
 
-  // ── Update sleep/craft fields ────────────────────────────
-  const updateDayField = async (dateStr, field, value) => {
-    const payload = buildDayPayload(dateStr, { [field]: value });
-    await optimisticSave(dateStr, payload);
+  const deleteTask = async (ds, key) => {
+    const c = monthData[ds] || {};
+    const custom = { ...c.customTasks };
+    delete custom[key];
+    const order = (c.taskOrder || []).filter((k) => k !== key);
+    const pin = { ...c.pinnedTimes };
+    delete pin[key];
+    const h = { ...c.habits };
+    delete h[key];
+    const le = { ...c.lateEntries };
+    delete le[key];
+    await save(
+      ds,
+      buildPayload(ds, {
+        taskOrder: order,
+        customTasks: custom,
+        pinnedTimes: pin,
+        habits: h,
+        lateEntries: le,
+      }),
+    );
+    showToast("Task removed — times reshuffled back", "info");
   };
 
-  // ── Change birthday date ─────────────────────────────────
-  const changeBirthday = async (newDate) => {
-    setBirthdayDate(newDate);
+  const moveTask = async (ds, key, direction) => {
+    const c = monthData[ds] || {};
+    const order = [
+      ...(c.taskOrder ||
+        getSchedule(ds, birthdayDate).blocks.map((b) => b.key)),
+    ];
+    const idx = order.indexOf(key);
+    if (idx < 0) return;
+    const newIdx = idx + direction;
+    if (newIdx < 0 || newIdx >= order.length) return;
+    [order[idx], order[newIdx]] = [order[newIdx], order[idx]];
+    await save(ds, buildPayload(ds, { taskOrder: order }));
+  };
+
+  const pinTime = async (ds, key, time) => {
+    const c = monthData[ds] || {};
+    const pin = { ...c.pinnedTimes };
+    if (time) pin[key] = time;
+    else delete pin[key];
+    await save(ds, buildPayload(ds, { pinnedTimes: pin }));
+  };
+
+  const moveToNow = async (ds, key) => {
+    await pinTime(ds, key, nowTimeStr());
+    showToast(`Moved to ${nowTimeStr()} — times reshuffled`, "info");
+  };
+
+  const resetSchedule = async (ds) => {
+    await save(
+      ds,
+      buildPayload(ds, {
+        taskOrder: null,
+        customTasks: null,
+        pinnedTimes: null,
+      }),
+    );
+    showToast("Schedule reset to default", "info");
+  };
+
+  const updateDayField = async (ds, f, v) => {
+    await save(ds, buildPayload(ds, { [f]: v }));
+  };
+  const changeBirthday = async (v) => {
+    setBirthdayDate(v);
     try {
-      await updateSettings({ birthdayDate: newDate });
-    } catch (err) {
-      showToast("Failed to update birthday date", "warn");
-    }
+      await updateSettings({ birthdayDate: v });
+    } catch (e) {}
   };
-
-  // ── Reset all data ───────────────────────────────────────
   const handleReset = async () => {
     try {
       await resetAllHabits();
@@ -246,55 +248,47 @@ export default function App() {
       setStreaks({});
       setCraftTotal(0);
       setShowReset(false);
-      showToast("All data has been reset", "info");
-    } catch (err) {
+      showToast("All data reset", "info");
+    } catch (e) {
       showToast("Reset failed", "warn");
     }
   };
 
-  // ── Keyboard ─────────────────────────────────────────────
   useEffect(() => {
-    const handler = (e) => {
+    const h = (e) => {
       if (e.key === "Escape") {
         if (showReset) setShowReset(false);
         else if (modalDate) setModalDate(null);
       }
     };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
   }, [showReset, modalDate]);
 
-  // ── Derived values ───────────────────────────────────────
   const daysLeft = birthdayDate ? daysUntilBirthday(birthdayDate) : 0;
-  const isMissionMode = daysLeft > 0;
   const todayStr = fmtDate(new Date());
+  const todayTasks = birthdayDate
+    ? getDayTasks(todayStr, birthdayDate, monthData[todayStr])
+    : [];
   const todaySched = birthdayDate ? getSchedule(todayStr, birthdayDate) : null;
 
-  if (loading || !birthdayDate) {
+  if (loading || !birthdayDate)
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-cream-deep border-t-terra rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-bark-muted font-medium">Loading your tracker...</p>
+          <p className="text-bark-muted font-medium">Loading...</p>
         </div>
       </div>
     );
-  }
 
   return (
     <>
-      {/* Toasts */}
       <div className="fixed top-4 right-4 z-[100] flex flex-col gap-2">
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`toast show px-4 py-3 rounded-xl shadow-lg text-sm font-semibold flex items-center gap-2 ${
-              t.type === "success"
-                ? "bg-mint text-white"
-                : t.type === "warn"
-                  ? "bg-gold text-white"
-                  : "bg-bark text-cream"
-            }`}
+            className={`toast show px-4 py-3 rounded-xl shadow-lg text-sm font-semibold flex items-center gap-2 ${t.type === "success" ? "bg-mint text-white" : t.type === "warn" ? "bg-gold text-white" : "bg-bark text-cream"}`}
           >
             <i
               className={`fa-solid ${t.type === "success" ? "fa-check-circle" : t.type === "warn" ? "fa-triangle-exclamation" : "fa-circle-info"}`}
@@ -304,7 +298,6 @@ export default function App() {
         ))}
       </div>
 
-      {/* HEADER */}
       <header className="border-b border-cream-deep bg-white/60 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <div className="flex items-center gap-3">
@@ -323,11 +316,9 @@ export default function App() {
           <div className="sm:ml-auto flex items-center gap-4">
             <div className="text-right">
               {daysLeft < 0 ? (
-                <>
-                  <div className="text-bark-muted text-sm font-medium">
-                    Birthday passed
-                  </div>
-                </>
+                <div className="text-bark-muted text-sm font-medium">
+                  Birthday passed
+                </div>
               ) : daysLeft === 0 ? (
                 <div className="countdown-num font-display font-black text-4xl text-gold leading-none">
                   Today!
@@ -345,7 +336,7 @@ export default function App() {
             </div>
             <div className="flex flex-col items-end gap-1">
               <label className="text-[10px] uppercase tracking-wider text-bark-muted font-semibold">
-                Birthday Date
+                Birthday
               </label>
               <input
                 type="date"
@@ -358,21 +349,19 @@ export default function App() {
         </div>
       </header>
 
-      {/* MODE BANNER */}
-      {isMissionMode ? (
+      {daysLeft > 0 ? (
         <div className="bg-terra text-white text-center py-2 text-sm font-bold tracking-wide">
-          <i className="fa-solid fa-bolt mr-2"></i>MISSION MODE — 6hr sleep,
-          maximum craft time — {daysLeft} days remaining
+          <i className="fa-solid fa-bolt mr-2"></i>MISSION MODE — {daysLeft}{" "}
+          days remaining
         </div>
       ) : (
         <div className="bg-teal text-white text-center py-2 text-sm font-bold tracking-wide">
-          <i className="fa-solid fa-leaf mr-2"></i>RECOVERY MODE — Normal sleep
-          schedule restored
+          <i className="fa-solid fa-leaf mr-2"></i>RECOVERY MODE
         </div>
       )}
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-        {/* TODAY'S TIMELINE */}
+        {/* TODAY TIMELINE */}
         <section className="bg-white rounded-2xl border border-cream-deep p-4 sm:p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -384,8 +373,8 @@ export default function App() {
                   weekday: "long",
                   month: "long",
                   day: "numeric",
-                })}
-                {" — "}
+                })}{" "}
+                —{" "}
                 <span
                   className={`font-semibold ${todaySched?.color === "terra" ? "text-terra" : todaySched?.color === "teal" ? "text-teal" : "text-gold-dark"}`}
                 >
@@ -397,64 +386,65 @@ export default function App() {
               className={`${todaySched?.badgeClass} text-xs font-bold px-3 py-1 rounded-full`}
             >
               <i className={`fa-solid ${todaySched?.icon} mr-1`}></i>
-              {todaySched?.sleepTarget}h sleep
+              {todaySched?.sleepTarget}h
             </span>
           </div>
           <div className="flex gap-2.5 overflow-x-auto pb-2 -mx-1 px-1">
-            {todaySched?.blocks.map((b, i) => {
-              const cs = CAT_STYLES[b.cat] || CAT_STYLES.routine;
-              const dayD = monthData[todayStr];
-              const checked = b.key ? !!dayD?.habits?.[b.key] : null;
-              const lateInfo = b.key ? dayD?.lateEntries?.[b.key] : null;
-              const overriddenTime = b.key ? dayD?.timeChanges?.[b.key] : null;
-              const displayTime = overriddenTime || b.time;
-              const isHigh =
-                b.cat === "gov" ||
-                b.cat === "craft" ||
-                b.cat === "pooja" ||
-                b.cat === "exercise";
+            {todayTasks.map((t, i) => {
+              const cs = CAT_STYLES[t.cat] || CAT_STYLES.routine;
+              const dd = monthData[todayStr];
+              const ck = t.trackable ? !!dd?.habits?.[t.key] : null;
+              const li = t.key ? dd?.lateEntries?.[t.key] : null;
+              const hi =
+                t.cat === "gov" ||
+                t.cat === "craft" ||
+                t.cat === "pooja" ||
+                t.cat === "exercise";
               return (
                 <div
                   key={i}
-                  className={`tl-card flex-shrink-0 w-[160px] ${cs.bg} ${cs.border} border rounded-xl p-3 ${isHigh ? "ring-1 ring-terra/10" : ""} ${lateInfo ? "ring-1 ring-gold/40" : ""}`}
+                  className={`tl-card flex-shrink-0 w-[160px] ${cs.bg} ${cs.border} border rounded-xl p-3 ${hi ? "ring-1 ring-terra/10" : ""} ${li ? "ring-1 ring-gold/40" : ""} ${t.isCustom ? "ring-1 ring-bark-light/30" : ""}`}
                 >
                   <div
                     className={`text-[10px] font-bold ${cs.text} uppercase tracking-wider mb-1 flex items-center gap-1`}
                   >
-                    {displayTime}
-                    {overriddenTime && (
-                      <i className="fa-solid fa-pen text-[7px] text-bark-light"></i>
+                    {t.time}
+                    {t.pinned && (
+                      <i className="fa-solid fa-thumbtack text-[7px] text-bark-light"></i>
+                    )}
+                    {t.isCustom && (
+                      <i className="fa-solid fa-plus text-[7px] text-bark-light"></i>
                     )}
                   </div>
                   <div
-                    className={`text-xs font-medium leading-snug ${b.key && checked ? "line-through opacity-60" : ""}`}
+                    className={`text-xs font-medium leading-snug ${t.trackable && ck ? "line-through opacity-60" : ""}`}
                   >
-                    {b.label}
+                    {t.label}
                   </div>
-                  {b.dur && (
+                  {t.durMins > 0 && (
                     <div className="text-[10px] text-bark-light mt-1">
-                      {b.dur}
+                      {t.durMins} min
                     </div>
                   )}
-                  {b.key && (
+                  {t.trackable && (
                     <div className="mt-2 flex items-center gap-1.5">
                       <input
                         type="checkbox"
-                        className={`habit-cb habit-cb-sm ${checked ? "checked" : ""}`}
-                        checked={!!checked}
-                        onChange={() => toggleHabit(todayStr, b.key)}
+                        className={`habit-cb habit-cb-sm ${ck ? "checked" : ""}`}
+                        checked={!!ck}
+                        onChange={() => toggleHabit(todayStr, t.key)}
                       />
                       <span
-                        className={`text-[10px] ${checked ? (lateInfo ? "text-gold-dark font-bold" : "text-mint font-bold") : "text-bark-light"}`}
+                        className={`text-[10px] ${ck ? (li ? "text-gold-dark" : "text-mint") + " font-bold" : "text-bark-light"}`}
                       >
-                        {checked ? (lateInfo ? `Late` : "Done") : "Track"}
+                        {ck ? (li ? "Late" : "Done") : "Track"}
                       </span>
                     </div>
                   )}
-                  {lateInfo && (
-                    <div className="mt-1.5 text-[9px] text-gold-dark font-medium leading-tight">
-                      <i class="fa-solid fa-clock mr-0.5"></i>
-                      {lateInfo.actualTime} — {lateInfo.reason}
+                  {li && (
+                    <div className="mt-1 text-[9px] text-gold-dark font-medium">
+                      <i className="fa-solid fa-clock mr-0.5"></i>
+                      {li.actualTime} — {li.reason}
                     </div>
                   )}
                 </div>
@@ -463,7 +453,6 @@ export default function App() {
           </div>
         </section>
 
-        {/* CALENDAR + SIDEBAR */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <Calendar
             months={months}
@@ -481,9 +470,9 @@ export default function App() {
             onReset={() => setShowReset(true)}
           />
         </div>
+        <ExamTracker />
       </main>
 
-      {/* DAY MODAL */}
       {modalDate && (
         <DayModal
           dateStr={modalDate}
@@ -492,13 +481,17 @@ export default function App() {
           onToggle={toggleHabit}
           onMarkLate={markDoneLate}
           onRemoveLate={removeLateEntry}
-          onTimeChange={updateTimeOverride}
+          onInsertTask={insertTask}
+          onDeleteTask={deleteTask}
+          onMoveTask={moveTask}
+          onPinTime={pinTime}
+          onMoveToNow={moveToNow}
+          onResetSchedule={resetSchedule}
           onUpdateField={updateDayField}
           onClose={() => setModalDate(null)}
         />
       )}
 
-      {/* RESET MODAL */}
       <div
         className={`modal-overlay fixed inset-0 z-[95] bg-bark/30 backdrop-blur-sm flex items-center justify-center p-4 ${showReset ? "" : "hidden"}`}
         onClick={(e) => {
@@ -513,8 +506,7 @@ export default function App() {
             Reset All Data?
           </h3>
           <p className="text-bark-muted text-sm mb-5">
-            This will clear all tracking data, time changes, late entries, and
-            logged hours from the database.
+            Clears all tracking, custom tasks, reshuffles, and late entries.
           </p>
           <div className="flex gap-3">
             <button

@@ -73,7 +73,55 @@ export const CAT_STYLES = {
   },
 };
 
-// ── Helper: get day type ─────────────────────────────────────
+// ── Time Math Utilities ──────────────────────────────────────
+
+export function timeToMins(timeStr) {
+  const p = timeStr.trim().match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if (!p) return 0;
+  let h = parseInt(p[1]),
+    m = parseInt(p[2]),
+    ap = p[3].toUpperCase();
+  if (ap === "AM" && h === 12) h = 0;
+  else if (ap === "PM" && h !== 12) h += 12;
+  return h * 60 + m;
+}
+
+export function minsToTime(mins) {
+  mins = ((mins % 1440) + 1440) % 1440;
+  const h24 = Math.floor(mins / 60),
+    m = mins % 60;
+  let h12 = h24 % 12;
+  if (h12 === 0) h12 = 12;
+  return `${h12}:${String(m).padStart(2, "0")} ${h24 < 12 ? "AM" : "PM"}`;
+}
+
+export function recalculateTimes(taskOrder, durMap, pinnedTimes) {
+  const times = {};
+  let currentMins = 0;
+  let started = false;
+  for (const key of taskOrder) {
+    if (pinnedTimes[key] !== undefined) {
+      times[key] = pinnedTimes[key];
+      currentMins = timeToMins(pinnedTimes[key]);
+      started = true;
+    } else if (started) {
+      times[key] = minsToTime(currentMins);
+    }
+    currentMins += durMap[key] || 0;
+  }
+  return times;
+}
+
+export function nowTimeStr() {
+  const n = new Date();
+  let h = n.getHours(),
+    m = n.getMinutes();
+  let h12 = h % 12;
+  if (h12 === 0) h12 = 12;
+  return `${h12}:${String(m).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`;
+}
+
+// ── Day type helper ──────────────────────────────────────────
 
 export function getDayType(date) {
   const d = date.getDay();
@@ -86,91 +134,137 @@ function isBeforeBirthday(dateStr, birthdayDate) {
   return dateStr < birthdayDate;
 }
 
-// ── Shared morning blocks ────────────────────────────────────
-// Wake → Exercise → Bath → Study → Pooja → Snacks → Leave
+// ── Morning blocks (shared) ─────────────────────────────────
 
-const MORNING_WEEKDAY = [
-  { time: "6:00 AM", label: "Wake Up", cat: "routine" },
+const MW = [
+  {
+    time: "6:00 AM",
+    label: "Wake Up",
+    cat: "routine",
+    key: "_wake",
+    durMins: 0,
+  },
   {
     time: "6:00 AM",
     label: "Freshen Up + Push Ups + Exercise",
     cat: "exercise",
     key: "exercise",
-    dur: "15 min",
+    durMins: 15,
+    trackable: true,
   },
-  { time: "6:15 AM", label: "Bath + Get Ready", cat: "routine", dur: "15 min" },
+  {
+    time: "6:15 AM",
+    label: "Bath + Get Ready",
+    cat: "routine",
+    key: "_bath",
+    durMins: 15,
+  },
   {
     time: "6:30 AM",
-    label: "Gov Exam — New Topic (fresh brain)",
+    label: "Gov Exam — New Topic",
     cat: "gov",
     key: "govMorning",
-    dur: "60 min",
+    durMins: 60,
+    trackable: true,
   },
   {
     time: "7:30 AM",
-    label: "Pooja (before snacks)",
+    label: "Pooja",
     cat: "pooja",
     key: "pooja",
-    dur: "15 min",
+    durMins: 15,
+    trackable: true,
   },
   {
     time: "7:45 AM",
     label: "Breakfast / Snacks",
     cat: "routine",
-    dur: "30 min",
+    key: "_snacks",
+    durMins: 30,
   },
-  { time: "8:15 AM", label: "Leave Home", cat: "routine" },
+  {
+    time: "8:15 AM",
+    label: "Leave Home",
+    cat: "routine",
+    key: "_leave",
+    durMins: 15,
+  },
   {
     time: "8:30 AM",
     label: "Commute to Office",
     cat: "routine",
-    dur: "60 min",
+    key: "_commute",
+    durMins: 60,
   },
-  { time: "9:30 AM", label: "Settle In", cat: "routine", dur: "30 min" },
+  {
+    time: "9:30 AM",
+    label: "Settle In",
+    cat: "routine",
+    key: "_settle",
+    durMins: 30,
+  },
 ];
 
-const MORNING_WEEKEND = [
-  { time: "6:00 AM", label: "Wake Up", cat: "routine" },
+const ME = [
+  {
+    time: "6:00 AM",
+    label: "Wake Up",
+    cat: "routine",
+    key: "_wake",
+    durMins: 0,
+  },
   {
     time: "6:00 AM",
     label: "Freshen Up + Push Ups + Exercise",
     cat: "exercise",
     key: "exercise",
-    dur: "15 min",
+    durMins: 15,
+    trackable: true,
   },
-  { time: "6:15 AM", label: "Bath + Get Ready", cat: "routine", dur: "15 min" },
+  {
+    time: "6:15 AM",
+    label: "Bath + Get Ready",
+    cat: "routine",
+    key: "_bath",
+    durMins: 15,
+  },
   {
     time: "6:30 AM",
-    label: "Pooja (before snacks)",
+    label: "Pooja",
     cat: "pooja",
     key: "pooja",
-    dur: "15 min",
+    durMins: 15,
+    trackable: true,
   },
-  { time: "6:45 AM", label: "Breakfast", cat: "routine", dur: "30 min" },
+  {
+    time: "6:45 AM",
+    label: "Breakfast",
+    cat: "routine",
+    key: "_snacks",
+    durMins: 30,
+  },
   {
     time: "7:15 AM",
     label: "Gov Exam — Deep Study + Practice Test",
     cat: "gov",
     key: "govMorning",
-    dur: "2 hrs",
+    durMins: 120,
+    trackable: true,
   },
-  { time: "9:15 AM", label: "Break — Tea", cat: "break", dur: "15 min" },
-];
-
-// Wind-down block description (same for all, just different times)
-const WIND_DOWN = (time) => [
   {
-    time,
-    label:
-      "Wind Down — Phone/laptop/TV off. Light reading, deep breathing, dim lights",
-    cat: "winddown",
+    time: "9:15 AM",
+    label: "Break — Tea",
+    cat: "break",
+    key: "_tea",
+    durMins: 15,
   },
 ];
 
 // ── All 6 schedule variants ─────────────────────────────────
 
-// PRE-BIRTHDAY: Class Night (Mon/Wed) — 6hr sleep
-const preClass = {
+const S = {};
+
+S.preClass = {
   label: "Mission Mode — Class Night",
   icon: "fa-video",
   color: "terra",
@@ -180,62 +274,94 @@ const preClass = {
   sleepTarget: 6,
   craftMins: 40,
   blocks: [
-    ...MORNING_WEEKDAY,
+    ...MW,
     {
       time: "10:00 AM",
       label: "GenAI — Review / Reading",
       cat: "genai",
       key: "genai",
-      dur: "75 min",
+      durMins: 75,
+      trackable: true,
     },
-    { time: "11:15 AM", label: "Work Tasks", cat: "work" },
+    {
+      time: "11:15 AM",
+      label: "Work Tasks",
+      cat: "work",
+      key: "_work1",
+      durMins: 165,
+    },
     {
       time: "2:00 PM",
       label: "Gov Exam — Practice Questions",
       cat: "gov",
       key: "govSecond",
-      dur: "75 min",
+      durMins: 75,
+      trackable: true,
     },
-    { time: "3:15 PM", label: "Work Tasks", cat: "work" },
-    { time: "6:00 PM", label: "Commute Home", cat: "routine", dur: "90 min" },
+    {
+      time: "3:15 PM",
+      label: "Work Tasks",
+      cat: "work",
+      key: "_work2",
+      durMins: 165,
+    },
+    {
+      time: "6:00 PM",
+      label: "Commute Home",
+      cat: "routine",
+      key: "_commuteHome",
+      durMins: 90,
+    },
     {
       time: "7:30 PM",
       label: "Dinner + Unwind",
       cat: "routine",
-      dur: "45 min",
+      key: "_dinner",
+      durMins: 45,
     },
     {
       time: "8:15 PM",
       label: "Crafting — Birthday Gift",
       cat: "craft",
       key: "crafting",
-      dur: "40 min",
+      durMins: 40,
+      trackable: true,
     },
     {
       time: "8:55 PM",
       label: "Transition to Class",
       cat: "routine",
-      dur: "5 min",
+      key: "_transition",
+      durMins: 5,
     },
     {
       time: "9:00 PM",
       label: "GenAI Live Class",
       cat: "genai",
       key: "genaiClass",
-      dur: "2.5 hrs",
+      durMins: 150,
+      trackable: true,
     },
-    ...WIND_DOWN("11:30 PM"),
+    {
+      time: "11:30 PM",
+      label:
+        "Wind Down — Phone/laptop/TV off. Light reading, deep breathing, dim lights",
+      cat: "winddown",
+      key: "_winddown",
+      durMins: 30,
+    },
     {
       time: "12:00 AM",
       label: "Bedtime (~6 hrs)",
       cat: "sleep",
       key: "sleepGoal",
+      durMins: 0,
+      trackable: true,
     },
   ],
 };
 
-// PRE-BIRTHDAY: Normal Night (Tue/Thu/Fri) — 6hr sleep, max craft
-const preNormal = {
+S.preNormal = {
   label: "Mission Mode — Normal Night",
   icon: "fa-bolt",
   color: "terra",
@@ -245,63 +371,95 @@ const preNormal = {
   sleepTarget: 6,
   craftMins: 120,
   blocks: [
-    ...MORNING_WEEKDAY,
+    ...MW,
     {
       time: "10:00 AM",
       label: "GenAI — Theory / Lessons",
       cat: "genai",
       key: "genai",
-      dur: "75 min",
+      durMins: 75,
+      trackable: true,
     },
-    { time: "11:15 AM", label: "Work Tasks", cat: "work" },
+    {
+      time: "11:15 AM",
+      label: "Work Tasks",
+      cat: "work",
+      key: "_work1",
+      durMins: 165,
+    },
     {
       time: "2:00 PM",
       label: "GenAI — Hands-on Practice",
       cat: "genai",
       key: "genaiOffice2",
-      dur: "75 min",
+      durMins: 75,
+      trackable: true,
     },
-    { time: "3:15 PM", label: "Work Tasks", cat: "work" },
-    { time: "6:00 PM", label: "Commute Home", cat: "routine", dur: "90 min" },
+    {
+      time: "3:15 PM",
+      label: "Work Tasks",
+      cat: "work",
+      key: "_work2",
+      durMins: 165,
+    },
+    {
+      time: "6:00 PM",
+      label: "Commute Home",
+      cat: "routine",
+      key: "_commuteHome",
+      durMins: 90,
+    },
     {
       time: "7:30 PM",
       label: "Dinner + Unwind",
       cat: "routine",
-      dur: "45 min",
+      key: "_dinner",
+      durMins: 45,
     },
     {
       time: "8:15 PM",
       label: "Crafting — Main Block",
       cat: "craft",
       key: "crafting",
-      dur: "75 min",
+      durMins: 75,
+      trackable: true,
     },
     {
       time: "9:30 PM",
       label: "Gov Exam — Revision",
       cat: "gov",
       key: "govSecond",
-      dur: "45 min",
+      durMins: 45,
+      trackable: true,
     },
     {
       time: "10:15 PM",
       label: "Crafting — Extra Block",
       cat: "craft",
       key: "craftExtra",
-      dur: "45 min",
+      durMins: 45,
+      trackable: true,
     },
-    ...WIND_DOWN("11:00 PM"),
+    {
+      time: "11:00 PM",
+      label:
+        "Wind Down — Phone/laptop/TV off. Light reading, deep breathing, dim lights",
+      cat: "winddown",
+      key: "_winddown",
+      durMins: 60,
+    },
     {
       time: "12:00 AM",
       label: "Bedtime (~6 hrs)",
       cat: "sleep",
       key: "sleepGoal",
+      durMins: 0,
+      trackable: true,
     },
   ],
 };
 
-// PRE-BIRTHDAY: Weekend — 6hr sleep, big craft blocks
-const preWeekend = {
+S.preWeekend = {
   label: "Mission Mode — Weekend",
   icon: "fa-fire",
   color: "terra",
@@ -311,42 +469,59 @@ const preWeekend = {
   sleepTarget: 6,
   craftMins: 240,
   blocks: [
-    ...MORNING_WEEKEND,
+    ...ME,
     {
       time: "9:30 AM",
       label: "GenAI — Project Work",
       cat: "genai",
       key: "genai",
-      dur: "60 min",
+      durMins: 60,
+      trackable: true,
     },
     {
       time: "10:30 AM",
       label: "Crafting — Main Build Block",
       cat: "craft",
       key: "crafting",
-      dur: "2.5 hrs",
+      durMins: 150,
+      trackable: true,
     },
-    { time: "1:00 PM", label: "Free Time / Rest / Errands", cat: "routine" },
+    {
+      time: "1:00 PM",
+      label: "Free Time / Rest / Errands",
+      cat: "routine",
+      key: "_free",
+      durMins: 420,
+    },
     {
       time: "8:00 PM",
       label: "Crafting — Extra Block",
       cat: "craft",
       key: "craftExtra",
-      dur: "1.5 hrs",
+      durMins: 90,
+      trackable: true,
     },
-    ...WIND_DOWN("9:30 PM"),
+    {
+      time: "9:30 PM",
+      label:
+        "Wind Down — Phone/laptop/TV off. Light reading, deep breathing, dim lights",
+      cat: "winddown",
+      key: "_winddown",
+      durMins: 150,
+    },
     {
       time: "12:00 AM",
       label: "Bedtime (~6 hrs)",
       cat: "sleep",
       key: "sleepGoal",
+      durMins: 0,
+      trackable: true,
     },
   ],
 };
 
-// POST-BIRTHDAY: Class Night (Mon/Wed) — 6hr sleep (unavoidable)
-const postClass = {
-  label: "Recovery Mode — Class Night",
+S.postClass = {
+  label: "Recovery — Class Night",
   icon: "fa-video",
   color: "teal",
   bgClass: "bg-teal-pale",
@@ -355,63 +530,95 @@ const postClass = {
   sleepTarget: 6,
   craftMins: 40,
   blocks: [
-    ...MORNING_WEEKDAY,
+    ...MW,
     {
       time: "10:00 AM",
       label: "GenAI — Review / Reading",
       cat: "genai",
       key: "genai",
-      dur: "75 min",
+      durMins: 75,
+      trackable: true,
     },
-    { time: "11:15 AM", label: "Work Tasks", cat: "work" },
+    {
+      time: "11:15 AM",
+      label: "Work Tasks",
+      cat: "work",
+      key: "_work1",
+      durMins: 165,
+    },
     {
       time: "2:00 PM",
       label: "Gov Exam — Practice Questions",
       cat: "gov",
       key: "govSecond",
-      dur: "75 min",
+      durMins: 75,
+      trackable: true,
     },
-    { time: "3:15 PM", label: "Work Tasks", cat: "work" },
-    { time: "6:00 PM", label: "Commute Home", cat: "routine", dur: "90 min" },
+    {
+      time: "3:15 PM",
+      label: "Work Tasks",
+      cat: "work",
+      key: "_work2",
+      durMins: 165,
+    },
+    {
+      time: "6:00 PM",
+      label: "Commute Home",
+      cat: "routine",
+      key: "_commuteHome",
+      durMins: 90,
+    },
     {
       time: "7:30 PM",
       label: "Dinner + Unwind",
       cat: "routine",
-      dur: "45 min",
+      key: "_dinner",
+      durMins: 45,
     },
     {
       time: "8:15 PM",
       label: "Crafting — Birthday Gift",
       cat: "craft",
       key: "crafting",
-      dur: "40 min",
+      durMins: 40,
+      trackable: true,
     },
     {
       time: "8:55 PM",
       label: "Transition to Class",
       cat: "routine",
-      dur: "5 min",
+      key: "_transition",
+      durMins: 5,
     },
     {
       time: "9:00 PM",
       label: "GenAI Live Class",
       cat: "genai",
       key: "genaiClass",
-      dur: "2.5 hrs",
+      durMins: 150,
+      trackable: true,
     },
-    ...WIND_DOWN("11:30 PM"),
+    {
+      time: "11:30 PM",
+      label:
+        "Wind Down — Phone/laptop/TV off. Light reading, deep breathing, dim lights",
+      cat: "winddown",
+      key: "_winddown",
+      durMins: 15,
+    },
     {
       time: "11:45 PM",
       label: "Bedtime (~6 hrs — class night)",
       cat: "sleep",
       key: "sleepGoal",
+      durMins: 0,
+      trackable: true,
     },
   ],
 };
 
-// POST-BIRTHDAY: Normal Night (Tue/Thu/Fri) — 7.5hr sleep, normal craft
-const postNormal = {
-  label: "Recovery Mode — Normal Night",
+S.postNormal = {
+  label: "Recovery — Normal Night",
   icon: "fa-moon",
   color: "teal",
   bgClass: "bg-teal-pale",
@@ -420,64 +627,102 @@ const postNormal = {
   sleepTarget: 7.5,
   craftMins: 45,
   blocks: [
-    ...MORNING_WEEKDAY,
+    ...MW,
     {
       time: "10:00 AM",
       label: "GenAI — Theory / Lessons",
       cat: "genai",
       key: "genai",
-      dur: "75 min",
+      durMins: 75,
+      trackable: true,
     },
-    { time: "11:15 AM", label: "Work Tasks", cat: "work" },
+    {
+      time: "11:15 AM",
+      label: "Work Tasks",
+      cat: "work",
+      key: "_work1",
+      durMins: 165,
+    },
     {
       time: "2:00 PM",
       label: "GenAI — Hands-on Practice",
       cat: "genai",
       key: "genaiOffice2",
-      dur: "75 min",
+      durMins: 75,
+      trackable: true,
     },
-    { time: "3:15 PM", label: "Work Tasks", cat: "work" },
-    { time: "6:00 PM", label: "Commute Home", cat: "routine", dur: "90 min" },
+    {
+      time: "3:15 PM",
+      label: "Work Tasks",
+      cat: "work",
+      key: "_work2",
+      durMins: 165,
+    },
+    {
+      time: "6:00 PM",
+      label: "Commute Home",
+      cat: "routine",
+      key: "_commuteHome",
+      durMins: 90,
+    },
     {
       time: "7:30 PM",
       label: "Dinner + Unwind",
       cat: "routine",
-      dur: "45 min",
+      key: "_dinner",
+      durMins: 45,
     },
     {
       time: "8:15 PM",
       label: "Short Break — Walk / Relax",
       cat: "break",
-      dur: "15 min",
+      key: "_walk",
+      durMins: 15,
     },
     {
       time: "8:30 PM",
       label: "Gov Exam — Revision",
       cat: "gov",
       key: "govSecond",
-      dur: "45 min",
+      durMins: 45,
+      trackable: true,
     },
-    { time: "9:15 PM", label: "Short Break", cat: "break", dur: "5 min" },
+    {
+      time: "9:15 PM",
+      label: "Short Break",
+      cat: "break",
+      key: "_break2",
+      durMins: 15,
+    },
     {
       time: "9:30 PM",
       label: "Crafting — Birthday Gift",
       cat: "craft",
       key: "crafting",
-      dur: "45 min",
+      durMins: 45,
+      trackable: true,
     },
-    ...WIND_DOWN("10:15 PM"),
+    {
+      time: "10:15 PM",
+      label:
+        "Wind Down — Phone/laptop/TV off. Light reading, deep breathing, dim lights",
+      cat: "winddown",
+      key: "_winddown",
+      durMins: 15,
+    },
     {
       time: "10:30 PM",
       label: "Bedtime (~7.5 hrs)",
       cat: "sleep",
       key: "sleepGoal",
+      durMins: 0,
+      trackable: true,
     },
   ],
 };
 
-// POST-BIRTHDAY: Weekend — 8hr sleep
-const postWeekend = {
-  label: "Recovery Mode — Weekend",
+S.postWeekend = {
+  label: "Recovery — Weekend",
   icon: "fa-sun",
   color: "gold",
   bgClass: "bg-gold-pale",
@@ -486,55 +731,63 @@ const postWeekend = {
   sleepTarget: 8,
   craftMins: 150,
   blocks: [
-    ...MORNING_WEEKEND,
+    ...ME,
     {
       time: "9:30 AM",
       label: "GenAI — Project Work",
       cat: "genai",
       key: "genai",
-      dur: "60 min",
+      durMins: 60,
+      trackable: true,
     },
     {
       time: "10:30 AM",
       label: "Crafting — Main Build Block",
       cat: "craft",
       key: "crafting",
-      dur: "2.5 hrs",
+      durMins: 150,
+      trackable: true,
     },
-    { time: "1:00 PM", label: "Free Time / Rest / Errands", cat: "routine" },
+    {
+      time: "1:00 PM",
+      label: "Free Time / Rest / Errands",
+      cat: "routine",
+      key: "_free",
+      durMins: 450,
+    },
     {
       time: "8:30 PM",
       label: "Optional: Extra Craft Session",
       cat: "craft",
       key: "craftExtra",
-      dur: "0–1 hr",
+      durMins: 90,
+      trackable: true,
     },
-    ...WIND_DOWN("10:00 PM"),
+    {
+      time: "10:00 PM",
+      label:
+        "Wind Down — Phone/laptop/TV off. Light reading, deep breathing, dim lights",
+      cat: "winddown",
+      key: "_winddown",
+      durMins: 30,
+    },
     {
       time: "10:30 PM",
       label: "Bedtime (~8 hrs)",
       cat: "sleep",
       key: "sleepGoal",
+      durMins: 0,
+      trackable: true,
     },
   ],
 };
 
-const S = {
-  preClass,
-  preNormal,
-  preWeekend,
-  postClass,
-  postNormal,
-  postWeekend,
-};
-
-// ── Main lookup ──────────────────────────────────────────────
+// ── Main schedule lookup ────────────────────────────────────
 
 export function getSchedule(dateStr, birthdayDate) {
-  const date = parseDate(dateStr);
-  const dt = getDayType(date);
-  const pre = isBeforeBirthday(dateStr, birthdayDate);
-
+  const d = parseDate(dateStr),
+    dt = getDayType(d),
+    pre = isBeforeBirthday(dateStr, birthdayDate);
   if (pre) {
     if (dt === "class") return S.preClass;
     if (dt === "weekend") return S.preWeekend;
@@ -546,20 +799,59 @@ export function getSchedule(dateStr, birthdayDate) {
   }
 }
 
+// ── Build the full task list for a day ──────────────────────
+// Handles: custom tasks, reordering, pinned times, auto-recalculation
+
+export function getDayTasks(dateStr, birthdayDate, dayData) {
+  const sched = getSchedule(dateStr, birthdayDate);
+  const taskOrder = dayData?.taskOrder || sched.blocks.map((b) => b.key);
+  const customTasks = dayData?.customTasks || {};
+  const pinnedTimes = dayData?.pinnedTimes || {};
+
+  // Build duration map
+  const durMap = {};
+  sched.blocks.forEach((b) => {
+    durMap[b.key] = b.durMins;
+  });
+  Object.entries(customTasks).forEach(([k, v]) => {
+    durMap[k] = v.durMins;
+  });
+
+  // Auto-pin first task if nothing pinned
+  const ep = { ...pinnedTimes };
+  if (Object.keys(ep).length === 0 && taskOrder.length > 0) {
+    const firstDefault = sched.blocks.find((b) => b.key === taskOrder[0]);
+    if (firstDefault) ep[taskOrder[0]] = firstDefault.time;
+  }
+
+  const times = recalculateTimes(taskOrder, durMap, ep);
+
+  return taskOrder.map((key) => {
+    const def = sched.blocks.find((b) => b.key === key);
+    const cus = customTasks[key];
+    return {
+      key,
+      label: cus?.label || def?.label || key,
+      cat: cus?.cat || def?.cat || "routine",
+      durMins: durMap[key] || 0,
+      time: times[key] || def?.time || "",
+      pinned: !!ep[key],
+      trackable: def?.trackable || false,
+      isCustom: !!cus,
+      defaultTime: def?.time || "",
+    };
+  });
+}
+
 // ── Date utilities ───────────────────────────────────────────
 
 export function fmtDate(d) {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
-
 export function parseDate(s) {
   const [y, m, d] = s.split("-").map(Number);
   return new Date(y, m - 1, d);
 }
-
 export function isToday(dateStr) {
   return dateStr === fmtDate(new Date());
 }
@@ -568,58 +860,54 @@ export function isFuture(dateStr) {
 }
 
 export function getThreeMonths() {
-  const now = new Date();
-  const months = [];
+  const n = new Date(),
+    ms = [];
   for (let i = 0; i < 3; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
-    months.push({
+    const d = new Date(n.getFullYear(), n.getMonth() + i, 1);
+    ms.push({
       year: d.getFullYear(),
       month: d.getMonth(),
       label: d.toLocaleDateString("en-US", { month: "long", year: "numeric" }),
       key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
     });
   }
-  return months;
+  return ms;
 }
 
 export function getMonthGrid(year, month) {
-  const firstDay = new Date(year, month, 1).getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const grid = [];
-  for (let i = 0; i < firstDay; i++) grid.push(null);
-  for (let d = 1; d <= daysInMonth; d++) grid.push(new Date(year, month, d));
-  return grid;
+  const f = new Date(year, month, 1).getDay(),
+    dim = new Date(year, month + 1, 0).getDate(),
+    g = [];
+  for (let i = 0; i < f; i++) g.push(null);
+  for (let d = 1; d <= dim; d++) g.push(new Date(year, month, d));
+  return g;
 }
 
-export function daysUntilBirthday(birthdayDate) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const bd = parseDate(birthdayDate);
-  bd.setHours(0, 0, 0, 0);
-  return Math.ceil((bd - today) / (1000 * 60 * 60 * 24));
+export function daysUntilBirthday(bd) {
+  const t = new Date();
+  t.setHours(0, 0, 0, 0);
+  const b = parseDate(bd);
+  b.setHours(0, 0, 0, 0);
+  return Math.ceil((b - t) / 864e5);
 }
 
-// ── Habit summary ────────────────────────────────────────────
+// ── Habit summary for calendar dots ─────────────────────────
 
 export function getHabitSummary(dateStr, birthdayDate, dayData) {
   const h = dayData?.habits || {};
-  const sched = getSchedule(dateStr, birthdayDate);
-  const trackable = sched.blocks.filter((b) => b.key);
-
+  const tasks = getDayTasks(dateStr, birthdayDate, dayData);
+  const trackable = tasks.filter((t) => t.trackable);
   return {
-    exercise: !!h.exercise,
     pooja: !!h.pooja,
     gov: !!h.govMorning,
     genai: !!h.genai || !!h.genaiClass || !!h.genaiOffice2,
     craft: !!h.crafting,
     sleep: !!h.sleepGoal,
     total: trackable.length,
-    done: trackable.filter((b) => h[b.key]).length,
-    allDone: trackable.length > 0 && trackable.every((b) => h[b.key]),
+    done: trackable.filter((t) => h[t.key]).length,
+    allDone: trackable.length > 0 && trackable.every((t) => h[t.key]),
   };
 }
-
-// ── Craft phases ─────────────────────────────────────────────
 
 export const CRAFT_PHASES = [
   {
@@ -647,5 +935,4 @@ export const CRAFT_PHASES = [
     icon: "fa-gift",
   },
 ];
-
 export const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];

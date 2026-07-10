@@ -37,8 +37,8 @@ body > * {
   box-shadow: 0 0 0 3px rgba(194, 65, 12, 0.1);
 }
 .habit-cb:checked {
-  background: #c2410c;
-  border-color: #c2410c;
+  background: var(--cb-color, #c2410c);
+  border-color: var(--cb-color, #c2410c);
 }
 .habit-cb:checked::after {
   content: "✓";

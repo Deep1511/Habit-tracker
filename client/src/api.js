@@ -1,58 +1,68 @@
-// const API = "/api";
-const API = "https://habit-tracker-n269.onrender.com/api";
+const API = "/api";
+
+// ── Request helper — MUST be defined before everything else ──
+
+async function request(url, options = {}) {
+  const res = await fetch(url, options);
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Server ${res.status}: ${text || res.statusText}`);
+  }
+  return res.json();
+}
 
 // ── Settings ─────────────────────────────────────────────────
 
 export async function getSettings() {
-  const res = await fetch(`${API}/settings`);
-  if (!res.ok) throw new Error("Failed to fetch settings");
-  return res.json();
+  return request(`${API}/settings`);
 }
 
 export async function updateSettings(data) {
-  const res = await fetch(`${API}/settings`, {
+  return request(`${API}/settings`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error("Failed to update settings");
-  return res.json();
 }
 
 // ── Habits ───────────────────────────────────────────────────
 
 export async function getMonthHabits(monthStr) {
-  const res = await fetch(`${API}/habits?month=${monthStr}`);
-  if (!res.ok) throw new Error("Failed to fetch habits");
-  return res.json();
+  return request(`${API}/habits?month=${monthStr}`);
 }
 
 export async function upsertDay(dateStr, data) {
-  const res = await fetch(`${API}/habits/${dateStr}`, {
+  return request(`${API}/habits/${dateStr}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error("Failed to save day");
-  return res.json();
 }
 
 export async function resetAllHabits() {
-  const res = await fetch(`${API}/habits`, { method: "DELETE" });
-  if (!res.ok) throw new Error("Failed to reset");
-  return res.json();
+  return request(`${API}/habits`, { method: "DELETE" });
 }
 
 // ── Stats ────────────────────────────────────────────────────
 
 export async function getStreaks() {
-  const res = await fetch(`${API}/stats/streaks`);
-  if (!res.ok) throw new Error("Failed to fetch streaks");
-  return res.json();
+  return request(`${API}/stats/streaks`);
 }
 
 export async function getCraftTotal() {
-  const res = await fetch(`${API}/stats/craft-total`);
-  if (!res.ok) throw new Error("Failed to fetch craft total");
-  return res.json();
+  return request(`${API}/stats/craft-total`);
+}
+
+// ── Exam Tracker ─────────────────────────────────────────────
+
+export async function getExamTracker() {
+  return request(`${API}/exam-tracker`);
+}
+
+export async function updateExamTracker(subjects) {
+  return request(`${API}/exam-tracker`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ subjects }),
+  });
 }

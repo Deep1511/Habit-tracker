@@ -14,6 +14,10 @@ const HabitDaySchema = new mongoose.Schema({
   habits: { type: Object, default: {} },
   sleepHours: { type: Number, default: null },
   craftMinutes: { type: Number, default: null },
+  taskOrder: { type: [String], default: undefined },
+  customTasks: { type: Object, default: undefined },
+  pinnedTimes: { type: Object, default: undefined },
+  lateEntries: { type: Object, default: undefined },
 });
 const HabitDay = mongoose.model("HabitDay", HabitDaySchema);
 
@@ -23,17 +27,49 @@ const SettingsSchema = new mongoose.Schema({
 });
 const Settings = mongoose.model("Settings", SettingsSchema);
 
+const ExamTrackerSchema = new mongoose.Schema({
+  key: { type: String, default: "main" },
+  subjects: [
+    {
+      id: String,
+      name: String,
+      order: Number,
+      topics: [
+        {
+          id: String,
+          name: String,
+          order: Number,
+          covered: { type: Boolean, default: false },
+          testDone: { type: Boolean, default: false },
+          important: { type: Boolean, default: false },
+        },
+      ],
+    },
+  ],
+});
+const ExamTracker = mongoose.model("ExamTracker", ExamTrackerSchema);
+
+const DEFAULT_SUBJECTS = [
+  { id: "sub_1", name: "Quantitative Aptitude", order: 0, topics: [] },
+  { id: "sub_2", name: "Verbal Reasoning", order: 1, topics: [] },
+  { id: "sub_3", name: "Polity", order: 2, topics: [] },
+  { id: "sub_4", name: "Economy", order: 3, topics: [] },
+  { id: "sub_5", name: "English", order: 4, topics: [] },
+  { id: "sub_6", name: "General Science", order: 5, topics: [] },
+  { id: "sub_7", name: "Geography", order: 6, topics: [] },
+  { id: "sub_8", name: "History", order: 7, topics: [] },
+  { id: "sub_9", name: "Current Affairs", order: 8, topics: [] },
+];
+
 // ── Settings Routes ──────────────────────────────────────────
 
-// Get or create settings
 app.get("/api/settings", async (req, res) => {
   try {
     let settings = await Settings.findOne({ key: "main" });
     if (!settings) {
-      // Default: Aug 11 of this year or next
       const now = new Date();
       let year = now.getFullYear();
-      const bd = new Date(year, 7, 11); // month is 0-indexed, Aug=7
+      const bd = new Date(year, 7, 11);
       if (bd < now) year++;
       settings = await Settings.create({ birthdayDate: `${year}-08-11` });
     }
@@ -43,7 +79,6 @@ app.get("/api/settings", async (req, res) => {
   }
 });
 
-// Update settings
 app.put("/api/settings", async (req, res) => {
   try {
     const { birthdayDate } = req.body;
@@ -62,15 +97,13 @@ app.put("/api/settings", async (req, res) => {
 
 // ── Habits Routes ────────────────────────────────────────────
 
-// Get habits for a month (YYYY-MM format)
 app.get("/api/habits", async (req, res) => {
   try {
     const { month } = req.query;
-    if (!month || !/^\d{4}-\d{2}$/.test(month)) {
+    if (!month || !/^\d{4}-\d{2}$/.test(month))
       return res
         .status(400)
         .json({ error: "Valid month param required (YYYY-MM)" });
-    }
     const regex = new RegExp(`^${month}-`);
     const days = await HabitDay.find({ date: regex }).sort({ date: 1 });
     res.json(days);
@@ -79,7 +112,6 @@ app.get("/api/habits", async (req, res) => {
   }
 });
 
-// Get single day
 app.get("/api/habits/:date", async (req, res) => {
   try {
     const day = await HabitDay.findOne({ date: req.params.date });
@@ -96,17 +128,34 @@ app.get("/api/habits/:date", async (req, res) => {
   }
 });
 
-// Upsert single day
 app.put("/api/habits/:date", async (req, res) => {
   try {
-    const { habits, sleepHours, craftMinutes } = req.body;
+    const {
+      habits,
+      sleepHours,
+      craftMinutes,
+      taskOrder,
+      customTasks,
+      pinnedTimes,
+      lateEntries,
+    } = req.body;
+    const updateData = {
+      habits: habits || {},
+      sleepHours: sleepHours ?? null,
+      craftMinutes: craftMinutes ?? null,
+    };
+    if (taskOrder !== undefined && taskOrder !== null)
+      updateData.taskOrder = taskOrder;
+    if (customTasks !== undefined && customTasks !== null)
+      updateData.customTasks = customTasks;
+    if (pinnedTimes !== undefined && pinnedTimes !== null)
+      updateData.pinnedTimes = pinnedTimes;
+    if (lateEntries !== undefined && lateEntries !== null)
+      updateData.lateEntries = lateEntries;
+
     const day = await HabitDay.findOneAndUpdate(
       { date: req.params.date },
-      {
-        habits: habits || {},
-        sleepHours: sleepHours ?? null,
-        craftMinutes: craftMinutes ?? null,
-      },
+      updateData,
       { new: true, upsert: true },
     );
     res.json(day);
@@ -115,7 +164,6 @@ app.put("/api/habits/:date", async (req, res) => {
   }
 });
 
-// Reset all habit data
 app.delete("/api/habits", async (req, res) => {
   try {
     await HabitDay.deleteMany({});
@@ -127,49 +175,35 @@ app.delete("/api/habits", async (req, res) => {
 
 // ── Stats Routes ─────────────────────────────────────────────
 
-// Calculate streaks
 app.get("/api/stats/streaks", async (req, res) => {
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
-    // Fetch last 400 days of data
     const past = new Date(today);
     past.setDate(past.getDate() - 400);
     const pastStr = past.toISOString().slice(0, 10);
     const todayStr = today.toISOString().slice(0, 10);
-
     const days = await HabitDay.find({
       date: { $lte: todayStr, $gte: pastStr },
     }).sort({ date: -1 });
-
-    // Build a map for quick lookup
     const dayMap = {};
     days.forEach((d) => {
       dayMap[d.date] = d;
     });
 
-    // Check if a date's habit is done
-    const isDone = (dateStr, checkFn) => {
-      const d = dayMap[dateStr];
-      if (!d) return false;
-      return checkFn(d.habits || {});
-    };
-
-    // Calculate streak going backwards from today
     const calcStreak = (checkFn) => {
       let streak = 0;
       for (let i = 0; i < 400; i++) {
         const d = new Date(today);
         d.setDate(d.getDate() - i);
         const ds = d.toISOString().slice(0, 10);
-        if (isDone(ds, checkFn)) streak++;
+        const data = dayMap[ds];
+        if (data && checkFn(data.habits || {})) streak++;
         else break;
       }
       return streak;
     };
 
-    // Habit check functions
     const checks = {
       all: (h) => {
         const k = Object.keys(h);
@@ -185,17 +219,14 @@ app.get("/api/stats/streaks", async (req, res) => {
     };
 
     const streaks = {};
-    for (const [key, fn] of Object.entries(checks)) {
+    for (const [key, fn] of Object.entries(checks))
       streaks[key] = calcStreak(fn);
-    }
-
     res.json(streaks);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Total craft minutes
 app.get("/api/stats/craft-total", async (req, res) => {
   try {
     const result = await HabitDay.aggregate([
@@ -208,6 +239,46 @@ app.get("/api/stats/craft-total", async (req, res) => {
   }
 });
 
+// ── Exam Tracker Routes ──────────────────────────────────────
+
+app.get("/api/exam-tracker", async (req, res) => {
+  try {
+    let tracker = await ExamTracker.findOne({ key: "main" });
+    if (!tracker) {
+      tracker = await ExamTracker.create({
+        key: "main",
+        subjects: DEFAULT_SUBJECTS,
+      });
+    }
+    res.json(tracker);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put("/api/exam-tracker", async (req, res) => {
+  try {
+    const { subjects } = req.body;
+    const tracker = await ExamTracker.findOneAndUpdate(
+      { key: "main" },
+      { subjects: subjects || [] },
+      { new: true, upsert: true },
+    );
+    res.json(tracker);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete("/api/exam-tracker", async (req, res) => {
+  try {
+    await ExamTracker.deleteMany({});
+    res.json({ message: "Exam tracker reset" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── Error Handler ────────────────────────────────────────────
 
 app.use((req, res) => {
@@ -215,23 +286,28 @@ app.use((req, res) => {
 });
 
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: "Server error" });
+  console.error("❌ Server error:", err.message);
+  res.status(500).json({ error: err.message });
 });
 
 // ── Start Server ─────────────────────────────────────────────
 
 const PORT = process.env.PORT || 5000;
+const MONGO_URI = process.env.MONGO_URI;
+
+if (!MONGO_URI) {
+  console.error("\n  ERROR: MONGO_URI not set in .env file\n");
+  process.exit(1);
+}
 
 mongoose
-  .connect(process.env.MONGO_URI)
+  .connect(MONGO_URI)
   .then(() => {
-    console.log("Connected to MongoDB");
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
+    console.log("✅ Connected to MongoDB");
+    console.log(`🚀 Server running on port ${PORT}\n`);
+    app.listen(PORT);
   })
   .catch((err) => {
-    console.error("MongoDB connection error:", err);
+    console.error("❌ MongoDB connection error:", err.message);
     process.exit(1);
   });
