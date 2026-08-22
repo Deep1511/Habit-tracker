@@ -1,7 +1,7 @@
 // const API = "/api";
 const API = "https://habit-tracker-n269.onrender.com/api";
 
-// ── Request helper — MUST be defined before everything else ──
+// ── Request helper ──
 
 async function request(url, options = {}) {
   const res = await fetch(url, options);
@@ -50,11 +50,15 @@ export async function getStreaks() {
   return request(`${API}/stats/streaks`);
 }
 
+export async function getMernTotal() {
+  return request(`${API}/stats/mern-total`);
+}
+
 export async function getCraftTotal() {
   return request(`${API}/stats/craft-total`);
 }
 
-// ── Exam Tracker ─────────────────────────────────────────────
+// ── Government Exam Tracker ──────────────────────────────────
 
 export async function getExamTracker() {
   return request(`${API}/exam-tracker`);
@@ -62,6 +66,20 @@ export async function getExamTracker() {
 
 export async function updateExamTracker(subjects) {
   return request(`${API}/exam-tracker`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ subjects }),
+  });
+}
+
+// ── MERN & DSA Interview Tracker ─────────────────────────────
+
+export async function getMernTracker() {
+  return request(`${API}/mern-tracker`);
+}
+
+export async function updateMernTracker(subjects) {
+  return request(`${API}/mern-tracker`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ subjects }),
