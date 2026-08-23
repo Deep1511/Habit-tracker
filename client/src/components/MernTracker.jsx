@@ -61,6 +61,7 @@ export default function MernTracker() {
   const [editingTopic, setEditingTopic] = useState(null);
   const [newTopicName, setNewTopicName] = useState("");
   const [addingToSub, setAddingToSub] = useState(null);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -85,6 +86,20 @@ export default function MernTracker() {
     } catch (e) {
       console.error(e);
     }
+  };
+
+  const resetAllProgress = async () => {
+    if (!tracker) return;
+    const subs = tracker.subjects.map((s) => ({
+      ...s,
+      topics: s.topics.map((t) => ({
+        ...t,
+        covered: false,
+        testDone: false,
+      })),
+    }));
+    await saveSubjects(subs);
+    setShowResetConfirm(false);
   };
 
   const toggleCovered = (subId, topicId) => {
@@ -200,6 +215,33 @@ export default function MernTracker() {
 
   return (
     <div className="space-y-5">
+      {/* Fresh Restart Active Banner */}
+      <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-indigo-50 border border-emerald-200/80 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-base shadow-xs flex-shrink-0">
+            <i className="fa-solid fa-seedling"></i>
+          </span>
+          <div>
+            <div className="text-xs sm:text-sm font-bold text-emerald-950 flex flex-wrap items-center gap-2">
+              Fresh Prep Restart (August 24, 2026)
+              <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-300">
+                Day 1: JS Fundamentals & Striver Step 1
+              </span>
+            </div>
+            <p className="text-xs text-emerald-800/80 leading-snug mt-0.5">
+              Curriculum configured from complete basics: JS Variables, Data Types & Functions + Striver Logic Building, Patterns & Math.
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={() => setShowResetConfirm(true)}
+          className="px-3.5 py-2 bg-white hover:bg-red-50 text-red-600 hover:text-red-700 text-xs font-bold rounded-xl border border-red-200 transition-all flex items-center gap-1.5 shadow-2xs flex-shrink-0 cursor-pointer"
+        >
+          <i className="fa-solid fa-arrows-rotate text-[11px]"></i>
+          Reset All Checkmarks (0%)
+        </button>
+      </div>
+
       {/* Header card with Striver DSA notice */}
       <div className="bg-gradient-to-br from-indigo-50 via-white to-purple-50 rounded-2xl border border-indigo-200/80 p-5 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
@@ -552,6 +594,41 @@ export default function MernTracker() {
             );
           })}
       </div>
+
+      {/* Reset Confirmation Modal */}
+      {showResetConfirm && (
+        <div className="fixed inset-0 bg-bark/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-cream-deep space-y-4">
+            <div className="flex items-center gap-3 text-red-600">
+              <span className="w-10 h-10 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center text-lg">
+                <i className="fa-solid fa-arrows-rotate"></i>
+              </span>
+              <div>
+                <h3 className="font-bold text-sm text-bark">Restart Fresh from Aug 24?</h3>
+                <p className="text-[11px] text-bark-muted">Reset all topic checkmarks to 0%</p>
+              </div>
+            </div>
+            <p className="text-xs text-bark-muted leading-relaxed">
+              This will uncheck all <strong>Covered</strong> and <strong>Tested</strong> checkmarks across all subjects so you can start tracking with a completely clean slate starting tomorrow.
+            </p>
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                onClick={() => setShowResetConfirm(false)}
+                className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-bark-muted hover:bg-cream transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={resetAllProgress}
+                className="px-4 py-1.5 rounded-xl text-xs font-bold bg-red-600 hover:bg-red-700 text-white shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+              >
+                <i className="fa-solid fa-check"></i>
+                Yes, Reset to 0%
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
