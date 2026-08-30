@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { RECOMMENDED_BOOKS } from "../scheduleData";
 
-export default function BookRecommendations({ onClose }) {
+export default function BookRecommendations({ onClose, onSelectBookForLogger }) {
   const [filterCat, setFilterCat] = useState("all");
   const [search, setSearch] = useState("");
 
@@ -133,20 +133,36 @@ export default function BookRecommendations({ onClose }) {
                 </div>
               </div>
 
-              {/* Amazon Button */}
-              <div className="pt-3 border-t border-cream-deep flex items-center justify-between">
-                <span className="text-[11px] text-bark-light font-medium">
+              {/* Actions: Log Reading + Amazon Link */}
+              <div className="pt-3 border-t border-cream-deep flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
+                <span className="text-[11px] text-bark-light font-medium truncate">
                   {b.category}
                 </span>
-                <a
-                  href={b.amazonUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold rounded-xl flex items-center gap-2 shadow-xs transition-all"
-                >
-                  <i className="fa-brands fa-amazon text-sm"></i>
-                  <span>View on Amazon</span>
-                </a>
+                <div className="flex items-center gap-2">
+                  {onSelectBookForLogger && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onSelectBookForLogger(b.title);
+                        onClose();
+                      }}
+                      className="px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer"
+                      title="Set this book in your study logger for 30m reading"
+                    >
+                      <i className="fa-solid fa-bolt text-purple-600 text-[10px]"></i>
+                      <span>Log 30m Reading</span>
+                    </button>
+                  )}
+                  <a
+                    href={b.amazonUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-2xs transition-all"
+                  >
+                    <i className="fa-brands fa-amazon text-xs"></i>
+                    <span>Amazon</span>
+                  </a>
+                </div>
               </div>
             </div>
           ))}

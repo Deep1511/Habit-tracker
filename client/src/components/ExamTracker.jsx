@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getExamTracker, updateExamTracker } from "../api";
+import { getExamTracker, updateExamTracker, getLocalCache } from "../api";
 
 const COLORS = [
   {
@@ -112,38 +112,53 @@ function getStatus(topic) {
   };
 }
 
-export default function ExamTracker() {
-  const [subjects, setSubjects] = useState([]);
+export default function ExamTracker({ refreshTrigger = 0, onTrackerChanged }) {
+  const [subjects, setSubjects] = useState(() => {
+    const cached = getLocalCache("exam_tracker", null);
+    return (cached?.subjects || DEFAULT_SUBJECTS).map((sub) => ({
+      ...sub,
+      topics: (sub.topics || []).map((t) => ({
+        ...t,
+        covered: t.covered ?? false,
+        testDone: t.testDone ?? false,
+        important: t.important ?? false,
+      })),
+    }));
+  });
+  const [statusFilter, setStatusFilter] = useState("all"); // 'all' | 'pending' | 'completed' | 'important'
+  const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState(null);
   const [addingSubject, setAddingSubject] = useState(false);
   const [newSubjectName, setNewSubjectName] = useState("");
   const [addingTopic, setAddingTopic] = useState(null);
   const [newTopicName, setNewTopicName] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [refreshTrigger]);
 
   const load = async () => {
     try {
       const data = await getExamTracker();
-      const migrated = (data.subjects || DEFAULT_SUBJECTS).map((sub) => ({
-        ...sub,
-        topics: sub.topics.map((t) => ({
-          ...t,
-          covered: t.covered ?? false,
-          testDone: t.testDone ?? false,
-          important: t.important ?? false,
-        })),
-      }));
-      setSubjects(migrated);
+      if (data?.subjects) {
+        const migrated = data.subjects.map((sub) => ({
+          ...sub,
+          topics: (sub.topics || []).map((t) => ({
+            ...t,
+            covered: t.covered ?? false,
+            testDone: t.testDone ?? false,
+            important: t.important ?? false,
+          })),
+        }));
+        setSubjects(migrated);
+      }
     } catch (e) {
-      console.error("ExamTracker load error:", e);
-      setSubjects(DEFAULT_SUBJECTS);
+      console.warn("ExamTracker background sync info:", e);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const save = async (newSubjects) => {
@@ -381,6 +396,56 @@ export default function ExamTracker() {
         </span>
       </div>
 
+      {/* Search & Status Filter Bar */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-cream/40 p-3 rounded-xl border border-cream-deep mb-4">
+        <div className="relative w-full sm:w-72">
+          <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-bark-light text-xs"></i>
+          <input
+            type="text"
+            placeholder="Search exam topics (Polity, Percentage, Blood Relations)..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border border-cream-deep bg-white focus:outline-none focus:ring-2 focus:ring-terra"
+          />
+        </div>
+
+        <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 flex-wrap">
+          <button
+            onClick={() => setStatusFilter("all")}
+            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              statusFilter === "all" ? "bg-terra text-white shadow-2xs" : "bg-white text-bark-muted hover:bg-cream border border-cream-deep"
+            }`}
+          >
+            All Topics
+          </button>
+          <button
+            onClick={() => setStatusFilter("pending")}
+            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              statusFilter === "pending" ? "bg-amber-600 text-white shadow-2xs" : "bg-white text-bark-muted hover:bg-cream border border-cream-deep"
+            }`}
+          >
+            ⏳ Pending Only ({totalTopics - fullyDone})
+          </button>
+          <button
+            onClick={() => setStatusFilter("completed")}
+            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              statusFilter === "completed" ? "bg-mint text-white shadow-2xs" : "bg-white text-bark-muted hover:bg-cream border border-cream-deep"
+            }`}
+          >
+            ✅ Fully Done ({fullyDone})
+          </button>
+          <button
+            onClick={() => setStatusFilter("important")}
+            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+              statusFilter === "important" ? "bg-gold-dark text-white shadow-2xs" : "bg-white text-bark-muted hover:bg-cream border border-cream-deep"
+            }`}
+          >
+            <i className="fa-solid fa-star text-[10px]"></i>
+            <span>Important ({importantTopics})</span>
+          </button>
+        </div>
+      </div>
+
       <div className="space-y-2">
         {subjects.map((sub, si) => {
           const color = COLORS[si % COLORS.length];
@@ -390,6 +455,13 @@ export default function ExamTracker() {
           const total = sub.topics.length;
           const isExp = expanded === si;
           const subPct = total > 0 ? Math.round((done / total) * 100) : 0;
+          const visibleTopics = sub.topics.filter((t) => {
+            if (statusFilter === "pending" && t.covered && t.testDone) return false;
+            if (statusFilter === "completed" && !(t.covered && t.testDone)) return false;
+            if (statusFilter === "important" && !t.important) return false;
+            if (search.trim() && !t.name.toLowerCase().includes(search.toLowerCase())) return false;
+            return true;
+          });
 
           return (
             <div
@@ -465,8 +537,14 @@ export default function ExamTracker() {
                     </p>
                   )}
 
+                  {total > 0 && visibleTopics.length === 0 && (
+                    <p className="text-xs text-bark-light text-center py-3 italic">
+                      No topics in this subject match the current filter.
+                    </p>
+                  )}
+
                   <div className="space-y-0.5">
-                    {sub.topics.map((topic, ti) => {
+                    {visibleTopics.map((topic, ti) => {
                       const status = getStatus(topic);
                       return (
                         <div

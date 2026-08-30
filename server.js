@@ -19,6 +19,7 @@ const HabitDaySchema = new mongoose.Schema({
   customTasks: { type: Object, default: undefined },
   pinnedTimes: { type: Object, default: undefined },
   lateEntries: { type: Object, default: undefined },
+  studyLogs: { type: Array, default: [] },
 });
 const HabitDay = mongoose.model("HabitDay", HabitDaySchema);
 
@@ -295,6 +296,7 @@ app.put("/api/habits/:date", async (req, res) => {
       customTasks,
       pinnedTimes,
       lateEntries,
+      studyLogs,
     } = req.body;
     const finalMinutes = mernMinutes ?? craftMinutes ?? null;
     const updateData = {
@@ -311,6 +313,8 @@ app.put("/api/habits/:date", async (req, res) => {
       updateData.pinnedTimes = pinnedTimes;
     if (lateEntries !== undefined && lateEntries !== null)
       updateData.lateEntries = lateEntries;
+    if (studyLogs !== undefined && studyLogs !== null)
+      updateData.studyLogs = studyLogs;
 
     const day = await HabitDay.findOneAndUpdate(
       { date: req.params.date },
@@ -376,6 +380,7 @@ app.get("/api/stats/streaks", async (req, res) => {
       gov: (h) =>
         h.govMorning === true ||
         h.govSecond === true ||
+        h.govDrill === true ||
         h.govNight === true ||
         h.govRevision === true,
       mern: (h) =>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getMernTracker, updateMernTracker } from "../api";
+import { getMernTracker, updateMernTracker, getLocalCache } from "../api";
 
 const COLORS = [
   {
@@ -52,24 +52,24 @@ const COLORS = [
   },
 ];
 
-export default function MernTracker() {
-  const [tracker, setTracker] = useState(null);
-  const [loading, setLoading] = useState(true);
+export default function MernTracker({ refreshTrigger = 0, onTrackerChanged }) {
+  const [tracker, setTracker] = useState(() => getLocalCache("mern_tracker", null));
+  const [loading, setLoading] = useState(() => !getLocalCache("mern_tracker", null));
   const [collapsed, setCollapsed] = useState({});
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("all"); // 'all' | 'dsa' | 'mern' | 'important'
+  const [statusFilter, setStatusFilter] = useState("all"); // 'all' | 'pending' | 'completed'
   const [editingTopic, setEditingTopic] = useState(null);
   const [newTopicName, setNewTopicName] = useState("");
   const [addingToSub, setAddingToSub] = useState(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const load = async () => {
-    setLoading(true);
     try {
       const data = await getMernTracker();
-      setTracker(data);
+      if (data) setTracker(data);
     } catch (e) {
-      console.error(e);
+      console.warn("MernTracker background sync:", e);
     } finally {
       setLoading(false);
     }
@@ -77,7 +77,7 @@ export default function MernTracker() {
 
   useEffect(() => {
     load();
-  }, []);
+  }, [refreshTrigger]);
 
   const saveSubjects = async (subs) => {
     try {
@@ -188,7 +188,7 @@ export default function MernTracker() {
     setEditingTopic(null);
   };
 
-  if (loading) {
+  if (!tracker && loading) {
     return (
       <div className="bg-white rounded-2xl border border-cream-deep p-8 text-center text-bark-muted">
         <i className="fa-solid fa-spinner fa-spin text-xl text-indigo-600 mb-2"></i>
@@ -326,28 +326,58 @@ export default function MernTracker() {
           />
         </div>
 
-        <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+        <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 flex-wrap">
+          {/* Status Filter Toggle */}
+          <div className="flex items-center bg-cream p-0.5 rounded-xl border border-cream-deep">
+            <button
+              onClick={() => setStatusFilter("all")}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                statusFilter === "all" ? "bg-indigo-600 text-white shadow-2xs" : "text-bark-muted hover:text-bark"
+              }`}
+            >
+              All Topics
+            </button>
+            <button
+              onClick={() => setStatusFilter("pending")}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                statusFilter === "pending" ? "bg-amber-600 text-white shadow-2xs" : "text-bark-muted hover:text-bark"
+              }`}
+            >
+              ⏳ Pending ({totalTopics - coveredTopics})
+            </button>
+            <button
+              onClick={() => setStatusFilter("completed")}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                statusFilter === "completed" ? "bg-emerald-600 text-white shadow-2xs" : "text-bark-muted hover:text-bark"
+              }`}
+            >
+              ✅ Covered ({coveredTopics})
+            </button>
+          </div>
+
+          <div className="h-4 w-px bg-cream-deep hidden sm:block mx-1"></div>
+
           <button
             onClick={() => setFilterType("all")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${filterType === "all" ? "bg-indigo-600 text-white" : "bg-cream text-bark-muted hover:bg-cream-dark"}`}
+            className={`px-2.5 py-1 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${filterType === "all" ? "bg-indigo-600 text-white" : "bg-cream text-bark-muted hover:bg-cream-dark"}`}
           >
-            All ({subjects.length})
+            All Tracks ({subjects.length})
           </button>
           <button
             onClick={() => setFilterType("dsa")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-1 ${filterType === "dsa" ? "bg-red-600 text-white" : "bg-cream text-bark-muted hover:bg-cream-dark"}`}
+            className={`px-2.5 py-1 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-1 ${filterType === "dsa" ? "bg-red-600 text-white" : "bg-cream text-bark-muted hover:bg-cream-dark"}`}
           >
             <i className="fa-brands fa-youtube text-[10px]"></i> Striver DSA
           </button>
           <button
             onClick={() => setFilterType("mern")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${filterType === "mern" ? "bg-indigo-600 text-white" : "bg-cream text-bark-muted hover:bg-cream-dark"}`}
+            className={`px-2.5 py-1 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${filterType === "mern" ? "bg-indigo-600 text-white" : "bg-cream text-bark-muted hover:bg-cream-dark"}`}
           >
             MERN Stack
           </button>
           <button
             onClick={() => setFilterType("important")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-1 ${filterType === "important" ? "bg-amber-600 text-white" : "bg-cream text-bark-muted hover:bg-cream-dark"}`}
+            className={`px-2.5 py-1 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-1 ${filterType === "important" ? "bg-amber-600 text-white" : "bg-cream text-bark-muted hover:bg-cream-dark"}`}
           >
             <i className="fa-solid fa-star text-[10px]"></i> Starred
           </button>
@@ -367,6 +397,8 @@ export default function MernTracker() {
             const col = COLORS[idx % COLORS.length];
             const isColl = !!collapsed[sub.id];
             const subTopics = sub.topics.filter((t) => {
+              if (statusFilter === "pending" && t.covered) return false;
+              if (statusFilter === "completed" && !t.covered) return false;
               if (filterType === "important" && !t.important) return false;
               if (search.trim()) {
                 const q = search.toLowerCase();
@@ -445,6 +477,11 @@ export default function MernTracker() {
                 {/* Topics Table / List */}
                 {!isColl && (
                   <div className="p-3 sm:p-4 divide-y divide-cream-deep/60">
+                    {subTopics.length === 0 && (
+                      <p className="text-xs text-bark-light text-center py-3 italic">
+                        No topics in this module match the current filter.
+                      </p>
+                    )}
                     {subTopics.map((topic) => {
                       const isEdit = editingTopic === topic.id;
 

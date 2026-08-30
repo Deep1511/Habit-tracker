@@ -434,7 +434,7 @@ export function getBrainFreshupForDay(dateStr) {
 const MW = [
   {
     time: "6:00 AM",
-    label: "Wake Up",
+    label: "Wake Up & Hydrate",
     cat: "routine",
     key: "_wake",
     durMins: 0,
@@ -464,14 +464,6 @@ const MW = [
   },
   {
     time: "6:45 AM",
-    label: "Gov Exam — Core Concept / New Topic",
-    cat: "gov",
-    key: "govMorning",
-    durMins: 60,
-    trackable: true,
-  },
-  {
-    time: "7:45 AM",
     label: "Pooja & Morning Meditation",
     cat: "pooja",
     key: "pooja",
@@ -479,25 +471,26 @@ const MW = [
     trackable: true,
   },
   {
-    time: "8:00 AM",
-    label: "Breakfast & Nutrition",
+    time: "7:00 AM",
+    label: "Healthy Breakfast & Nutrition",
     cat: "routine",
     key: "_snacks",
-    durMins: 30,
+    durMins: 20,
   },
   {
-    time: "8:30 AM",
-    label: "Commute to Office (Tech Audio / Revision)",
+    time: "7:20 AM",
+    label: "Gov Exam Prime Block — Deep Mock Test & Aptitude Drills",
+    cat: "gov",
+    key: "govMorning",
+    durMins: 55,
+    trackable: true,
+  },
+  {
+    time: "8:15 AM",
+    label: "Morning Travel / Commute (Audio Revision / Relax)",
     cat: "routine",
     key: "_commute",
-    durMins: 60,
-  },
-  {
-    time: "9:30 AM",
-    label: "Settle In & Daily Plan",
-    cat: "routine",
-    key: "_settle",
-    durMins: 30,
+    durMins: 75,
   },
 ];
 
@@ -568,69 +561,114 @@ const ME = [
 
 const S = {};
 
-// SPRINT MODE: Class Night (Mon / Wed) — 70% Govt Exam Priority
+// SPRINT MODE: Class Night (Mon / Wed) — High Intensity Dual Prep (Govt + MERN)
 S.preClass = {
-  label: "Sprint Mode — Class Night (70% Govt Exam Priority)",
+  label: "Sprint Mode — Dual Prep (Govt + MERN Class Night)",
   icon: "fa-video",
   color: "terra",
   bgClass: "bg-terra-pale",
   borderClass: "border-terra/20",
   badgeClass: "bg-terra text-white",
   sleepTarget: 5.5,
-  mernMins: 225,
+  mernMins: 345,
   blocks: [
     ...MW,
     {
-      time: "10:00 AM",
-      label: "MERN & DSA Quick Sprint — Striver 1-2 Problems / JS Core",
+      time: "9:30 AM",
+      label: "MERN & Striver DSA Deep Sprint — Core Algorithms & Logic Coding",
       cat: "mern",
       key: "mernMorning",
-      durMins: 75,
+      durMins: 120,
       trackable: true,
     },
     {
-      time: "11:15 AM",
-      label: "Work Tasks — Office Focus",
+      time: "11:30 AM",
+      label: "Parallel Company Tasks & Flexible Admin Slot",
       cat: "work",
       key: "_work1",
-      durMins: 165,
+      durMins: 60,
     },
     {
-      time: "2:00 PM",
-      label: "Gov Exam — Practice Questions & Test Drill",
+      time: "12:30 PM",
+      label: "MERN Prep — Frontend/Backend Code Building & Architecture",
+      cat: "mern",
+      key: "mernBackend",
+      durMins: 60,
+      trackable: true,
+    },
+    {
+      time: "1:30 PM",
+      label: "Lunch & Rest Break",
+      cat: "routine",
+      key: "_lunch",
+      durMins: 45,
+    },
+    {
+      time: "2:15 PM",
+      label: "Gov Exam Mid-Day Sprint — General Studies, Polity & History Story Lectures",
       cat: "gov",
       key: "govSecond",
       durMins: 75,
       trackable: true,
     },
     {
-      time: "3:15 PM",
-      label: "Work Tasks — Office Focus",
-      cat: "work",
-      key: "_work2",
-      durMins: 165,
+      time: "3:30 PM",
+      label: "Tea & Brain Reset",
+      cat: "break",
+      key: "_tea2",
+      durMins: 15,
+    },
+    {
+      time: "3:45 PM",
+      label: "Gov Exam Sectional Practice — Quantitative Aptitude & Verbal Reasoning",
+      cat: "gov",
+      key: "govDrill",
+      durMins: 60,
+      trackable: true,
+    },
+    {
+      time: "4:45 PM",
+      label: "MERN Practice — Class Pre-Read & Code Sandbox",
+      cat: "mern",
+      key: "mernProject",
+      durMins: 75,
+      trackable: true,
     },
     {
       time: "6:00 PM",
-      label: "Commute Home (Govt Audio / PYQs)",
+      label: "Evening Travel / Commute Home (Audio Podcasts / Decompression)",
       cat: "routine",
       key: "_commuteHome",
-      durMins: 90,
+      durMins: 60,
+    },
+    {
+      time: "7:00 PM",
+      label: "Flexible Parallel Work Sync & Daily Wrap-Up",
+      cat: "work",
+      key: "_work2",
+      durMins: 30,
     },
     {
       time: "7:30 PM",
-      label: "Dinner + Relax",
+      label: "Dinner & Family Time",
       cat: "routine",
       key: "_dinner",
       durMins: 45,
     },
     {
       time: "8:15 PM",
-      label: "Gov Exam Prime Block — Speed Test & Mock Drill",
+      label: "Gov Exam Speed Mock & Question Drill",
       cat: "gov",
       key: "govNight",
-      durMins: 45,
+      durMins: 40,
       trackable: true,
+    },
+    {
+      time: "8:55 PM",
+      label: "Transition to Live Class",
+      cat: "routine",
+      key: "_transition",
+      durMins: 5,
     },
     {
       time: "9:00 PM",
@@ -642,7 +680,7 @@ S.preClass = {
     },
     {
       time: "11:30 PM",
-      label: "Gov Exam Deep Revision — Formulas & Daily Current Affairs",
+      label: "Gov Exam & Tech Day Revision — Daily Current Affairs & Formulas",
       cat: "gov",
       key: "govRevision",
       durMins: 30,
@@ -650,7 +688,7 @@ S.preClass = {
     },
     {
       time: "12:00 AM",
-      label: "Wind Down — Screen off, dim lights, calm mind",
+      label: "Wind Down — Screen off, relaxation",
       cat: "winddown",
       key: "_winddown",
       durMins: 30,
@@ -666,58 +704,96 @@ S.preClass = {
   ],
 };
 
-// SPRINT MODE: Normal Night (Tue / Thu / Fri) — 70% Govt Exam / 30% MERN & DSA
+// SPRINT MODE: Normal Night (Tue / Thu / Fri) — High Intensity Dual Prep
 S.preNormal = {
-  label: "Sprint Mode — 70% Govt Exam / 30% MERN Night",
+  label: "Sprint Mode — High Intensity Dual Prep (Govt + MERN)",
   icon: "fa-bolt",
   color: "terra",
   bgClass: "bg-terra-pale",
   borderClass: "border-terra/20",
   badgeClass: "bg-terra text-white",
   sleepTarget: 5.5,
-  mernMins: 120,
+  mernMins: 315,
   blocks: [
     ...MW,
     {
-      time: "10:00 AM",
-      label: "MERN & DSA Quick Sprint — Striver 1-2 Problems / JS Core",
+      time: "9:30 AM",
+      label: "MERN & Striver DSA Deep Sprint — Core Algorithms & Logic Coding",
       cat: "mern",
       key: "mernMorning",
-      durMins: 75,
+      durMins: 120,
       trackable: true,
     },
     {
-      time: "11:15 AM",
-      label: "Work Tasks — Office Focus",
+      time: "11:30 AM",
+      label: "Parallel Company Tasks & Flexible Admin Slot",
       cat: "work",
       key: "_work1",
-      durMins: 165,
+      durMins: 60,
     },
     {
-      time: "2:00 PM",
-      label: "Gov Exam Daytime Drill — General Studies & Reasoning",
+      time: "12:30 PM",
+      label: "MERN Architecture — React Hooks, Node.js & Full-Stack System",
+      cat: "mern",
+      key: "mernBackend",
+      durMins: 60,
+      trackable: true,
+    },
+    {
+      time: "1:30 PM",
+      label: "Lunch & Rest Break",
+      cat: "routine",
+      key: "_lunch",
+      durMins: 45,
+    },
+    {
+      time: "2:15 PM",
+      label: "Gov Exam Mid-Day Sprint — General Studies, Polity & History Story Lectures",
       cat: "gov",
       key: "govSecond",
       durMins: 75,
       trackable: true,
     },
     {
-      time: "3:15 PM",
-      label: "Work Tasks — Office Focus",
-      cat: "work",
-      key: "_work2",
-      durMins: 165,
+      time: "3:30 PM",
+      label: "Tea & Brain Reset / Quick Analogy Review",
+      cat: "break",
+      key: "_tea2",
+      durMins: 15,
+    },
+    {
+      time: "3:45 PM",
+      label: "Gov Exam Sectional Practice — Quantitative Aptitude & Verbal Reasoning",
+      cat: "gov",
+      key: "govDrill",
+      durMins: 60,
+      trackable: true,
+    },
+    {
+      time: "4:45 PM",
+      label: "MERN Machine Coding & Full-Stack Feature Building",
+      cat: "mern",
+      key: "mernProject",
+      durMins: 75,
+      trackable: true,
     },
     {
       time: "6:00 PM",
-      label: "Commute Home (Govt GK / Audio Revision)",
+      label: "Evening Travel / Commute Home (Audio Podcasts / Decompression)",
       cat: "routine",
       key: "_commuteHome",
-      durMins: 90,
+      durMins: 60,
+    },
+    {
+      time: "7:00 PM",
+      label: "Flexible Parallel Work Sync & Daily Wrap-Up",
+      cat: "work",
+      key: "_work2",
+      durMins: 30,
     },
     {
       time: "7:30 PM",
-      label: "Dinner + Relax",
+      label: "Dinner & Family Time",
       cat: "routine",
       key: "_dinner",
       durMins: 45,
@@ -732,23 +808,23 @@ S.preNormal = {
     },
     {
       time: "9:45 PM",
-      label: "Gov Exam Deep Revision — Polity, History, Economy & Current Affairs",
-      cat: "gov",
-      key: "govRevision",
+      label: "MERN & Striver DSA — 1 Pattern Code Review / Tech Defense",
+      cat: "mern",
+      key: "mernNight",
       durMins: 60,
       trackable: true,
     },
     {
       time: "10:45 PM",
-      label: "MERN & Striver DSA — 1 Pattern Code Review / Node-React Concept",
-      cat: "mern",
-      key: "mernNight",
+      label: "Gov Exam Deep Revision — Formulas & Daily Current Affairs",
+      cat: "gov",
+      key: "govRevision",
       durMins: 45,
       trackable: true,
     },
     {
       time: "11:30 PM",
-      label: "Book Reading — Motivation, Life Lessons & Philosophy",
+      label: "Book Reading — Life Wisdom, Discipline & Philosophy",
       cat: "reading",
       key: "reading",
       durMins: 30,
@@ -1301,15 +1377,44 @@ export const TASK_GUIDES = {
     outcome: "Sharpened accuracy and speed under test constraints.",
     checklist: ["PYQ drills completed", "Accuracy calculated"],
   },
-  _work2: {
-    title: "Work Tasks — Office Focus Sprint 2",
-    desc: "Second professional engineering sprint: Pull Request reviews, system integration tests, stakeholder sync, and wrapping up daily commits.",
+  _lunch: {
+    title: "Lunch & Rest Break",
+    desc: "Wholesome, balanced midday meal and digestion pause. Keep portions moderate to avoid heavy post-prandial sluggishness.",
     tips: [
-      "Clean up Git branches and document any pending blockers before end of day.",
-      "Leave a clear 'next step' note for tomorrow morning."
+      "Step away from the desk to let your eyes and brain rest.",
+      "Stay well hydrated."
     ],
-    outcome: "Completion of daily work responsibilities and clean Git commits.",
-    checklist: ["PRs reviewed", "Blockers resolved", "Day wrapped up"],
+    outcome: "Physical nourishment and mental reboot for afternoon sprints.",
+    checklist: ["Balanced meal", "Screen-free rest"],
+  },
+  _tea2: {
+    title: "Tea & Brain Reset",
+    desc: "Short 15-minute afternoon reset. Enjoy a hot cup of green tea or masala chai, stretch your legs, and glance at 1-2 analogies in the Anti-Boredom Vault.",
+    tips: [
+      "Do light shoulder and neck stretches.",
+      "Avoid heavy snacks that cause insulin drowsiness."
+    ],
+    outcome: "Refreshed alertness for the late afternoon session.",
+    checklist: ["Tea consumed", "Stretching done"],
+  },
+  govDrill: {
+    title: "Gov Exam Sectional Practice — Quantitative Aptitude & Reasoning",
+    desc: "High-intensity speed and accuracy drill: Timed 20-30 question sets in Arithmetic, Algebra, Syllogisms, Puzzles, or Data Interpretation.",
+    tips: [
+      "Use shortcut calculation tricks (Vedic math, ratio approximations).",
+      "Skip questions taking more than 60 seconds on the first pass."
+    ],
+    outcome: "High speed, mental math sharpening, and improved sectional accuracy.",
+    checklist: ["Sectional drill solved", "Accuracy > 85%", "Formulas verified"],
+  },
+  _work2: {
+    title: "Flexible Work Sync & Daily Wrap-Up",
+    desc: "Light parallel work wrap-up: Check communications, wrap up daily commitments, and organize pending tasks.",
+    tips: [
+      "Keep this focused and time-boxed to 30 minutes so it doesn't spill into evening study."
+    ],
+    outcome: "Clean work wrap-up and zero lingering office anxiety.",
+    checklist: ["Comms cleared", "Work done for the day"],
   },
   _commuteHome: {
     title: "Commute Home",
@@ -1606,7 +1711,13 @@ export function getHabitSummary(dateStr, targetDate, dayData, startDate = START_
   const trackable = tasks.filter((t) => t.trackable);
   return {
     pooja: !!h.pooja,
-    gov: !!h.govMorning || !!h.govSecond || !!h.govNight || !!h.govRevision,
+    gov:
+      !!h.gov ||
+      !!h.govMorning ||
+      !!h.govSecond ||
+      !!h.govDrill ||
+      !!h.govNight ||
+      !!h.govRevision,
     mern:
       !!h.mern ||
       !!h.mernMorning ||

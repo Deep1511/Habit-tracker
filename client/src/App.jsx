@@ -7,6 +7,7 @@ import {
   resetAllHabits,
   getStreaks,
   getMernTotal,
+  getLocalCache,
 } from "./api";
 import {
   getSchedule,
@@ -30,22 +31,103 @@ import ExamTracker from "./components/ExamTracker";
 import MernTracker from "./components/MernTracker";
 import BookRecommendations from "./components/BookRecommendations";
 import TaskDetailModal from "./components/TaskDetailModal";
+import StudySessionLogger from "./components/StudySessionLogger";
+import MentalModelsModal from "./components/MentalModelsModal";
+import ChronoAdvisor from "./components/ChronoAdvisor";
+import BedtimeSummaryModal from "./components/BedtimeSummaryModal";
+import RevisionRadar from "./components/RevisionRadar";
+import EmergencyRescueModal from "./components/EmergencyRescueModal";
+import RapidDrillModal from "./components/RapidDrillModal";
 
 export default function App() {
-  const [startDate, setStartDate] = useState("2026-08-24");
-  const [targetDate, setTargetDate] = useState("");
-  const [monthData, setMonthData] = useState({});
-  const [streaks, setStreaks] = useState({});
-  const [mernTotal, setMernTotal] = useState(0);
-  const [activeMonth, setActiveMonth] = useState(0);
+  const cachedSettings = getLocalCache("settings", {});
+  const [startDate, setStartDate] = useState(
+    cachedSettings.startDate || "2026-08-24"
+  );
+  const [targetDate, setTargetDate] = useState(
+    cachedSettings.targetDate || cachedSettings.birthdayDate || "2026-11-24"
+  );
+  const [monthData, setMonthData] = useState(() => {
+    const tmKey = fmtDate(new Date()).slice(0, 7);
+    const cached = getLocalCache(`habits_${tmKey}`, []);
+    const m = {};
+    cached.forEach((x) => (m[x.date] = x));
+    return m;
+  });
+  const [streaks, setStreaks] = useState(() => getLocalCache("streaks", {}));
+  const [mernTotal, setMernTotal] = useState(
+    () => getLocalCache("mern_total", { totalMinutes: 0 })?.totalMinutes || 0
+  );
+  const [activeMonth, setActiveMonth] = useState(() => {
+    const m = getThreeMonths(),
+      tm = new Date().getMonth(),
+      idx = m.findIndex((x) => x.month === tm);
+    return idx >= 0 ? idx : 0;
+  });
   const [modalDate, setModalDate] = useState(null);
   const [selectedTask, setSelectedTask] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [toasts, setToasts] = useState([]);
   const [showReset, setShowReset] = useState(false);
   const [showBooks, setShowBooks] = useState(false);
+  const [showMentalVault, setShowMentalVault] = useState(false);
+  const [showBedtimeSummary, setShowBedtimeSummary] = useState(false);
+  const [showTimeline, setShowTimeline] = useState(true);
+  const [todayMission, setTodayMission] = useState(() => {
+    return (
+      localStorage.getItem("today_mission_" + fmtDate(new Date())) ||
+      localStorage.getItem("tomorrow_goal_" + fmtDate(new Date())) ||
+      ""
+    );
+  });
+  const [isEditingMission, setIsEditingMission] = useState(false);
+  const [missionInput, setMissionInput] = useState("");
+  const [showRescueModal, setShowRescueModal] = useState(false);
+  const [showRapidDrill, setShowRapidDrill] = useState(false);
   const [activeTrackerTab, setActiveTrackerTab] = useState("mern"); // 'mern' | 'gov'
+  const [trackerRefreshTrigger, setTrackerRefreshTrigger] = useState(0);
   const months = getThreeMonths();
+
+  const handleSaveRescueSession = async (sessionData) => {
+    const todayStr = fmtDate(new Date());
+    const dd = monthData[todayStr] || {};
+    const currentHabits = dd.habits || {};
+    const updatedHabits = { ...currentHabits };
+
+    if (sessionData.track === "mern") {
+      updatedHabits.mern = true;
+      updatedHabits.mernMorning = true;
+    } else if (sessionData.track === "gov") {
+      updatedHabits.gov = true;
+      updatedHabits.govMorning = true;
+    } else {
+      updatedHabits.roomClean = true;
+    }
+
+    const newLog = {
+      id: `rescue_${Date.now()}`,
+      ...sessionData,
+      timestamp: new Date().toISOString(),
+      timeStr: nowTimeStr(),
+      time: nowTimeStr(),
+      autoTicked: true,
+    };
+
+    const updatedLogs = [newLog, ...(dd.studyLogs || [])];
+    const prevMern = dd.mernMinutes || 0;
+    const updatedMern = sessionData.track === "mern" ? prevMern + 15 : prevMern;
+
+    const payload = {
+      ...dd,
+      habits: updatedHabits,
+      studyLogs: updatedLogs,
+      mernMinutes: updatedMern,
+      craftMinutes: updatedMern,
+    };
+
+    await save(todayStr, payload);
+    setTrackerRefreshTrigger((prev) => prev + 1);
+  };
 
   const showToast = useCallback((message, type = "info") => {
     const id = Date.now();
@@ -59,40 +141,47 @@ export default function App() {
   const loadMonth = useCallback(async (mk) => {
     try {
       const d = await getMonthHabits(mk);
-      const m = {};
-      d.forEach((x) => (m[x.date] = x));
-      setMonthData(m);
+      if (Array.isArray(d)) {
+        const m = {};
+        d.forEach((x) => (m[x.date] = x));
+        setMonthData((prev) => ({ ...prev, ...m }));
+      }
     } catch (e) {
-      console.error(e);
+      console.warn("Month fetch fallback:", e);
     }
   }, []);
 
   const loadStats = useCallback(async () => {
     try {
       const [s, m] = await Promise.all([getStreaks(), getMernTotal()]);
-      setStreaks(s);
-      setMernTotal(m.totalMinutes || 0);
+      if (s) setStreaks(s);
+      if (m?.totalMinutes !== undefined) setMernTotal(m.totalMinutes);
     } catch (e) {
-      console.error(e);
+      console.warn("Stats fetch fallback:", e);
     }
   }, []);
 
   const loadAll = useCallback(async () => {
-    setLoading(true);
+    setIsSyncing(true);
     try {
-      const s = await getSettings();
-      setStartDate(s.startDate || "2026-08-24");
-      setTargetDate(s.targetDate || s.birthdayDate || "2026-11-24");
+      const s = await getSettings().catch(() => null);
+      if (s?.startDate) setStartDate(s.startDate);
+      if (s?.targetDate || s?.birthdayDate) {
+        setTargetDate(s.targetDate || s.birthdayDate);
+      }
       const m = getThreeMonths(),
         tm = new Date().getMonth(),
         idx = m.findIndex((x) => x.month === tm);
-      setActiveMonth(idx >= 0 ? idx : 0);
-      await loadMonth(m[idx >= 0 ? idx : 0].key);
-      await loadStats();
+      const activeIdx = idx >= 0 ? idx : 0;
+      setActiveMonth(activeIdx);
+      await Promise.all([
+        loadMonth(m[activeIdx].key),
+        loadStats(),
+      ]);
     } catch (e) {
-      console.error(e);
+      console.warn("Background sync info:", e);
     } finally {
-      setLoading(false);
+      setIsSyncing(false);
     }
   }, [loadMonth, loadStats]);
 
@@ -117,6 +206,7 @@ export default function App() {
       customTasks: ov.customTasks ?? c.customTasks ?? null,
       pinnedTimes: ov.pinnedTimes ?? c.pinnedTimes ?? null,
       lateEntries: ov.lateEntries ?? c.lateEntries ?? {},
+      studyLogs: ov.studyLogs ?? c.studyLogs ?? [],
     };
   };
 
@@ -134,6 +224,11 @@ export default function App() {
       });
       showToast("Save failed", "warn");
     }
+  };
+
+  const handleTrackersUpdated = (trackType, updatedData) => {
+    setTrackerRefreshTrigger((prev) => prev + 1);
+    setTimeout(loadStats, 300);
   };
 
   // ── Habit actions ─────────────────────────────────────────
@@ -273,12 +368,15 @@ export default function App() {
     const h = (e) => {
       if (e.key === "Escape") {
         if (showReset) setShowReset(false);
+        else if (showMentalVault) setShowMentalVault(false);
+        else if (showBooks) setShowBooks(false);
+        else if (selectedTask) setSelectedTask(null);
         else if (modalDate) setModalDate(null);
       }
     };
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
-  }, [showReset, modalDate]);
+  }, [showReset, showMentalVault, showBooks, selectedTask, modalDate]);
 
   const daysLeft = targetDate ? daysUntilTarget(targetDate) : 0;
   const todayStr = fmtDate(new Date());
@@ -287,16 +385,6 @@ export default function App() {
     : [];
   const todaySched = targetDate ? getSchedule(todayStr, targetDate) : null;
   const todayTopic = getTopicForDay(todayStr);
-
-  if (loading || !targetDate)
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-cream">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-cream-deep border-t-indigo-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-bark-muted font-medium">Loading Habit Tracker...</p>
-        </div>
-      </div>
-    );
 
   return (
     <>
@@ -323,9 +411,17 @@ export default function App() {
               <i className="fa-solid fa-layer-group text-white text-sm"></i>
             </div>
             <div>
-              <h1 className="font-display font-black text-xl leading-tight text-bark">
-                Habit Tracker
-              </h1>
+              <div className="flex items-center gap-2">
+                <h1 className="font-display font-black text-xl leading-tight text-bark">
+                  Habit Tracker
+                </h1>
+                {isSyncing && (
+                  <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full flex items-center gap-1 animate-pulse">
+                    <i className="fa-solid fa-rotate text-[9px] fa-spin"></i>
+                    Syncing
+                  </span>
+                )}
+              </div>
               <p className="text-bark-muted text-xs font-semibold">
                 MERN Full-Stack & Govt Exam Sprint
               </p>
@@ -354,10 +450,50 @@ export default function App() {
               )}
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                onClick={() => setShowRescueModal(true)}
+                className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-black rounded-lg flex items-center gap-1.5 transition-all shadow-xs cursor-pointer animate-pulse"
+                title="Low energy or busy? 15-Minute Emergency Day-Rescue to save your streak"
+              >
+                <i className="fa-solid fa-bolt text-amber-200 text-[11px]"></i>
+                <span className="hidden sm:inline">⚡ Day Rescue</span>
+                <span className="sm:hidden">Rescue</span>
+              </button>
+
+              <button
+                onClick={() => setShowRapidDrill(true)}
+                className="px-3 py-1.5 bg-gradient-to-r from-teal-600 to-indigo-600 hover:from-teal-700 hover:to-indigo-700 text-white text-xs font-black rounded-lg flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                title="60-Second Rapid-Fire Interview & Exam Flash Drill"
+              >
+                <i className="fa-solid fa-gamepad text-teal-200 text-[11px]"></i>
+                <span className="hidden sm:inline">🥊 60s Drill</span>
+                <span className="sm:hidden">Drill</span>
+              </button>
+
+              <button
+                onClick={() => setShowBedtimeSummary(true)}
+                className="px-3 py-1.5 bg-gradient-to-r from-indigo-950 to-purple-950 hover:from-indigo-900 hover:to-purple-900 text-white text-xs font-black rounded-lg flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                title="Bedtime Whole Day Review & Tomorrow's Improvement Compass"
+              >
+                <i className="fa-solid fa-moon text-amber-400 text-[11px]"></i>
+                <span className="hidden sm:inline">Bedtime Review</span>
+                <span className="sm:hidden">Review</span>
+              </button>
+
+              <button
+                onClick={() => setShowMentalVault(true)}
+                className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-bold rounded-lg flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                title="Bored or Lazy? Read 30-Sec MERN Analogies & Psychology Tricks"
+              >
+                <i className="fa-solid fa-lightbulb text-white text-[11px]"></i>
+                <span className="hidden sm:inline">Anti-Boredom Vault</span>
+                <span className="sm:hidden">Vault</span>
+              </button>
+
               <button
                 onClick={() => setShowBooks(true)}
-                className="px-3 py-1.5 bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors shadow-xs"
+                className="px-3 py-1.5 bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
                 title="View Recommended Books & Amazon Links"
               >
                 <i className="fa-solid fa-book-open text-purple-600"></i>
@@ -393,7 +529,121 @@ export default function App() {
         </div>
       )}
 
+      {/* TODAY'S #1 CORE MISSION ACTIVE BANNER */}
+      <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white px-4 py-2.5 shadow-xs border-b border-amber-600/60 flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2.5 flex-1 min-w-[260px]">
+          <span className="w-7 h-7 rounded-lg bg-black/20 text-amber-200 flex items-center justify-center text-xs font-black flex-shrink-0 shadow-inner">
+            <i className="fa-solid fa-crosshairs"></i>
+          </span>
+          <span className="text-xs font-black uppercase tracking-wider text-amber-100 flex-shrink-0">
+            Today's #1 Mission:
+          </span>
+          {isEditingMission ? (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (missionInput.trim()) {
+                  const val = missionInput.trim();
+                  setTodayMission(val);
+                  localStorage.setItem("today_mission_" + todayStr, val);
+                  localStorage.setItem("tomorrow_goal_" + todayStr, val);
+                  setIsEditingMission(false);
+                  showToast("🎯 Today's Core Mission locked in!", "success");
+                }
+              }}
+              className="flex items-center gap-2 flex-1 max-w-md"
+            >
+              <input
+                type="text"
+                value={missionInput}
+                onChange={(e) => setMissionInput(e.target.value)}
+                placeholder="e.g. Master Binary Search + Clean Room..."
+                className="text-xs px-2.5 py-1 rounded-lg bg-white text-bark font-bold flex-1 focus:outline-none focus:ring-2 focus:ring-amber-300"
+                autoFocus
+              />
+              <button
+                type="submit"
+                className="px-2.5 py-1 bg-black/30 hover:bg-black/40 text-white text-xs font-bold rounded-lg cursor-pointer"
+              >
+                Save
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsEditingMission(false)}
+                className="text-xs font-bold text-white/80 hover:text-white cursor-pointer px-1"
+              >
+                Cancel
+              </button>
+            </form>
+          ) : (
+            <div className="flex items-center gap-2 text-xs font-extrabold text-white truncate">
+              <span className={monthData[todayStr]?.habits?.coreMission ? "line-through opacity-75" : ""}>
+                {todayMission || "Click 'Set Goal' to lock in your #1 target for today!"}
+              </span>
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          {todayMission && !isEditingMission && (
+            <button
+              type="button"
+              onClick={() => {
+                toggleHabit(todayStr, "coreMission");
+                const nextState = !monthData[todayStr]?.habits?.coreMission;
+                if (nextState) {
+                  showToast("🎉 Core Mission Accomplished! Incredible focus!", "success");
+                }
+              }}
+              className={`px-3 py-1 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs ${
+                monthData[todayStr]?.habits?.coreMission
+                  ? "bg-emerald-700 text-white border border-emerald-500"
+                  : "bg-white text-amber-900 hover:bg-amber-50"
+              }`}
+            >
+              <i
+                className={`fa-solid ${
+                  monthData[todayStr]?.habits?.coreMission
+                    ? "fa-circle-check text-emerald-300"
+                    : "fa-circle text-amber-400"
+                }`}
+              ></i>
+              <span>
+                {monthData[todayStr]?.habits?.coreMission
+                  ? "Mission Accomplished! 🎉"
+                  : "Mark Done"}
+              </span>
+            </button>
+          )}
+
+          {!isEditingMission && (
+            <button
+              type="button"
+              onClick={() => {
+                setMissionInput(todayMission);
+                setIsEditingMission(true);
+              }}
+              className="px-2.5 py-1 bg-black/20 hover:bg-black/30 text-white text-[11px] font-bold rounded-lg cursor-pointer transition-all flex items-center gap-1"
+              title="Edit today's core target"
+            >
+              <i className="fa-solid fa-pen-to-square text-[10px]"></i>
+              <span>{todayMission ? "Edit" : "Set Goal"}</span>
+            </button>
+          )}
+        </div>
+      </div>
+
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+        {/* REAL-TIME CHRONO ADVISOR: WHAT TO STUDY RIGHT NOW */}
+        <ChronoAdvisor
+          onSelectTrack={(track) => {
+            setActiveTrackerTab(track === "gov" ? "gov" : "mern");
+            showToast(`Switched view to ${track === "gov" ? "Government Exam" : "MERN & DSA"} Track`, "info");
+          }}
+          onOpenVault={() => setShowMentalVault(true)}
+          onOpenBedtimeSummary={() => setShowBedtimeSummary(true)}
+        />
+
         {/* TODAY SCHEDULE & CURRICULUM TIMELINE */}
         <section className="bg-white rounded-2xl border border-cream-deep p-4 sm:p-5 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
@@ -420,6 +670,16 @@ export default function App() {
             </div>
 
             <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setShowTimeline(!showTimeline)}
+                className="px-2.5 py-1 rounded-lg border border-cream-deep text-xs font-bold text-bark-muted hover:text-bark hover:bg-cream/60 transition-colors flex items-center gap-1.5 cursor-pointer"
+                title="Toggle timeline visibility"
+              >
+                <i className={`fa-solid ${showTimeline ? "fa-chevron-up" : "fa-chevron-down"} text-[10px]`}></i>
+                <span>{showTimeline ? "Minimize Timetable" : "Show Full Timetable"}</span>
+              </button>
+
               <span className="text-xs font-bold text-bark-muted hidden sm:inline">
                 Sleep target:
               </span>
@@ -433,7 +693,8 @@ export default function App() {
           </div>
 
           {/* Timeline horizontal scroll cards */}
-          <div className="flex gap-2.5 overflow-x-auto pb-2 -mx-1 px-1">
+          {showTimeline && (
+            <div className="flex gap-2.5 overflow-x-auto pb-2 -mx-1 px-1">
             {todayTasks.map((t, i) => {
               const cs = CAT_STYLES[t.cat] || CAT_STYLES.routine;
               const dd = monthData[todayStr];
@@ -517,7 +778,32 @@ export default function App() {
               );
             })}
           </div>
+          )}
         </section>
+
+        {/* QUICK STUDY LOGGER & AUTO-TICK ENGINE */}
+        <StudySessionLogger
+          dateStr={todayStr}
+          dayData={monthData[todayStr] || {}}
+          onSaveDay={save}
+          onTrackersUpdated={handleTrackersUpdated}
+          showToast={showToast}
+          refreshTrigger={trackerRefreshTrigger}
+          onOpenVault={() => setShowMentalVault(true)}
+          onOpenBedtimeSummary={() => setShowBedtimeSummary(true)}
+        />
+
+        {/* SPACED REPETITION & WEAKNESS REVISION RADAR */}
+        <RevisionRadar
+          allDays={monthData}
+          onSelectTopicForReview={(item) => {
+            const el = document.getElementById("study-session-logger-section");
+            if (el) {
+              el.scrollIntoView({ behavior: "smooth" });
+            }
+            showToast(`Loaded "${item.topicName}" for 5-Min Spaced Flash Recall!`, "info");
+          }}
+        />
 
         {/* CALENDAR & SIDEBAR GRID */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -546,21 +832,31 @@ export default function App() {
           <div className="flex items-center gap-2 border-b border-cream-deep pb-3">
             <button
               onClick={() => setActiveTrackerTab("mern")}
-              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${activeTrackerTab === "mern" ? "bg-indigo-600 text-white shadow-sm" : "bg-white text-bark-muted hover:bg-cream-dark border border-cream-deep"}`}
+              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${activeTrackerTab === "mern" ? "bg-indigo-600 text-white shadow-sm" : "bg-white text-bark-muted hover:bg-cream-dark border border-cream-deep"}`}
             >
               <i className="fa-solid fa-code"></i>
               MERN & DSA Interview Master Tracker
             </button>
             <button
               onClick={() => setActiveTrackerTab("gov")}
-              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${activeTrackerTab === "gov" ? "bg-terra-dark text-white shadow-sm" : "bg-white text-bark-muted hover:bg-cream-dark border border-cream-deep"}`}
+              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${activeTrackerTab === "gov" ? "bg-terra-dark text-white shadow-sm" : "bg-white text-bark-muted hover:bg-cream-dark border border-cream-deep"}`}
             >
               <i className="fa-solid fa-book-bookmark"></i>
               Government Exam Tracker
             </button>
           </div>
 
-          {activeTrackerTab === "mern" ? <MernTracker /> : <ExamTracker />}
+          {activeTrackerTab === "mern" ? (
+            <MernTracker
+              refreshTrigger={trackerRefreshTrigger}
+              onTrackerChanged={() => setTrackerRefreshTrigger((p) => p + 1)}
+            />
+          ) : (
+            <ExamTracker
+              refreshTrigger={trackerRefreshTrigger}
+              onTrackerChanged={() => setTrackerRefreshTrigger((p) => p + 1)}
+            />
+          )}
         </div>
       </main>
 
@@ -597,8 +893,46 @@ export default function App() {
 
       {/* BOOK RECOMMENDATIONS MODAL */}
       {showBooks && (
-        <BookRecommendations onClose={() => setShowBooks(false)} />
+        <BookRecommendations
+          onClose={() => setShowBooks(false)}
+          onSelectBookForLogger={(bookTitle) => {
+            const el = document.getElementById("study-session-logger-section");
+            if (el) {
+              el.scrollIntoView({ behavior: "smooth" });
+            }
+            showToast(`Selected "${bookTitle}" for 30m Reading Session! Check the logger below.`, "success");
+          }}
+        />
       )}
+
+      {/* ANTI-BOREDOM & MENTAL MODELS VAULT MODAL */}
+      {showMentalVault && (
+        <MentalModelsModal onClose={() => setShowMentalVault(false)} />
+      )}
+
+      {/* BEDTIME WHOLE DAY SUMMARY & TOMORROW'S PLAN MODAL */}
+      <BedtimeSummaryModal
+        isOpen={showBedtimeSummary}
+        onClose={() => setShowBedtimeSummary(false)}
+        dateStr={todayStr}
+        dayData={monthData[todayStr] || {}}
+        allDays={monthData}
+        showToast={showToast}
+      />
+
+      {/* 15-MINUTE EMERGENCY DAY RESCUE MODAL */}
+      <EmergencyRescueModal
+        isOpen={showRescueModal}
+        onClose={() => setShowRescueModal(false)}
+        onSaveRescueSession={handleSaveRescueSession}
+        showToast={showToast}
+      />
+
+      {/* 60-SEC RAPID-FIRE SELF-TEST DRILL MODAL */}
+      <RapidDrillModal
+        isOpen={showRapidDrill}
+        onClose={() => setShowRapidDrill(false)}
+      />
 
       {/* RESET CONFIRMATION MODAL */}
       <div

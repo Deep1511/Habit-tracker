@@ -54,6 +54,69 @@ export default function Sidebar({
     ws.total++;
   }
 
+  // 7-Day Performance & Balance Data
+  const last7DaysData = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const ds = fmtDate(d);
+    const dayObj = monthData[ds] || {};
+    const logs = dayObj.studyLogs || [];
+
+    let mernM = logs.filter((l) => l.track === "mern").reduce((acc, l) => acc + (Number(l.minutes) || 0), 0);
+    let govM = logs.filter((l) => l.track === "gov").reduce((acc, l) => acc + (Number(l.minutes) || 0), 0);
+    let lifeM = logs.filter((l) => l.track === "life").reduce((acc, l) => acc + (Number(l.minutes) || 0), 0);
+
+    if (mernM === 0 && dayObj.mernMinutes) {
+      mernM = dayObj.mernMinutes;
+    }
+
+    const totalM = mernM + govM + lifeM;
+    const dayLabel = d.toLocaleDateString("en-US", { weekday: "narrow" });
+    const isToday = i === 0;
+
+    last7DaysData.push({
+      dateStr: ds,
+      dayLabel,
+      mernM,
+      govM,
+      lifeM,
+      totalM,
+      totalHrs: (totalM / 60).toFixed(1),
+      isToday,
+    });
+  }
+
+  const maxDailyMins = Math.max(120, ...last7DaysData.map((d) => d.totalM));
+
+  const consistencyDays = last7DaysData.filter((d) => d.totalM > 0).length;
+  const mernWeekMins = last7DaysData.reduce((acc, d) => acc + d.mernM, 0);
+  const govWeekMins = last7DaysData.reduce((acc, d) => acc + d.govM, 0);
+  const lifeWeekMins = last7DaysData.reduce((acc, d) => acc + d.lifeM, 0);
+  const totalWeekMins = mernWeekMins + govWeekMins + lifeWeekMins;
+
+  const consistencyScore = Math.min(100, Math.round((consistencyDays / 7) * 100));
+  const ratio =
+    mernWeekMins > 0 && govWeekMins > 0
+      ? Math.min(mernWeekMins, govWeekMins) / Math.max(mernWeekMins, govWeekMins)
+      : 0.3;
+  const balanceScore = totalWeekMins > 0 ? Math.round(50 + ratio * 50) : 0;
+  const momentumScore = Math.min(
+    100,
+    Math.round(consistencyScore * 0.6 + balanceScore * 0.4)
+  );
+
+  let coachingTip = "⚡ Solid balance! Aim for 120+ mins daily to keep momentum in the 90s.";
+  if (totalWeekMins === 0) {
+    coachingTip = "🌱 Start with a 15-Min Rescue Sprint today to ignite your weekly momentum engine.";
+  } else if (mernWeekMins === 0 && govWeekMins > 0) {
+    coachingTip = "⚠️ MERN Gap: Add 60 mins tomorrow 9:30 AM on Striver DSA to maintain technical sharpness.";
+  } else if (govWeekMins === 0 && mernWeekMins > 0) {
+    coachingTip = "⚠️ Govt Gap: Add 45 mins speed-math & reasoning tomorrow morning to keep exam speed high.";
+  } else if (momentumScore >= 85) {
+    coachingTip = "🔥 Elite Momentum: Dual-track velocity is dialed in. Keep executing morning Striver + Govt mock.";
+  }
+
   const todayStr = fmtDate(today);
   const todayTopic = getTopicForDay(todayStr);
   const todayBrain = getBrainFreshupForDay(todayStr);
@@ -142,6 +205,46 @@ export default function Sidebar({
 
   return (
     <aside className="space-y-5">
+      {/* Weekly Momentum & AI Coaching Score */}
+      <div className="bg-gradient-to-br from-indigo-950 via-slate-900 to-purple-950 text-white rounded-2xl p-4 sm:p-5 shadow-md border border-indigo-800/60 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="w-7 h-7 rounded-lg bg-amber-400 text-slate-950 flex items-center justify-center text-xs font-black shadow-xs">
+              <i className="fa-solid fa-gauge-high"></i>
+            </span>
+            <div>
+              <h3 className="font-display font-extrabold text-xs uppercase tracking-wider text-teal-300">
+                Weekly Momentum Score
+              </h3>
+              <div className="text-[10px] text-indigo-200">
+                Consistency + Dual-Track Balance
+              </div>
+            </div>
+          </div>
+
+          <div className="text-right">
+            <span className="font-display font-black text-2xl text-amber-300">
+              {momentumScore}
+            </span>
+            <span className="text-xs text-indigo-300 font-bold">/100</span>
+          </div>
+        </div>
+
+        {/* Momentum Progress Bar */}
+        <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-amber-400 via-teal-400 to-emerald-400 rounded-full transition-all duration-700"
+            style={{ width: `${momentumScore}%` }}
+          ></div>
+        </div>
+
+        {/* AI Coaching Tip */}
+        <div className="bg-white/10 p-2.5 rounded-xl border border-white/15 text-[11px] leading-relaxed text-indigo-100 flex items-start gap-2">
+          <i className="fa-solid fa-lightbulb text-amber-400 text-xs mt-0.5 flex-shrink-0"></i>
+          <span>{coachingTip}</span>
+        </div>
+      </div>
+
       {/* Today's Topic Card */}
       <div className="bg-gradient-to-br from-indigo-50 via-white to-indigo-50/40 rounded-2xl border border-indigo-200/80 p-5 shadow-sm">
         <div className="flex items-center justify-between mb-2">
@@ -409,6 +512,62 @@ export default function Sidebar({
               </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* 7-Day Performance & Track Balance Chart */}
+      <div className="bg-white rounded-2xl border border-cream-deep p-5 shadow-sm space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-display font-bold text-sm text-bark flex items-center gap-1.5">
+              <i className="fa-solid fa-chart-simple text-indigo-600"></i>
+              <span>7-Day Output & Balance</span>
+            </h3>
+            <p className="text-[10px] text-bark-muted mt-0.5">
+              Govt vs MERN vs Life & Wellness output
+            </p>
+          </div>
+          <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+            Past 7 Days
+          </span>
+        </div>
+
+        {/* Legend */}
+        <div className="flex items-center gap-2.5 text-[10px] font-bold text-bark-muted flex-wrap">
+          <span className="flex items-center gap-1">
+            <span className="w-2.5 h-2.5 rounded-xs bg-terra"></span> Govt Exam
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-2.5 h-2.5 rounded-xs bg-indigo-600"></span> MERN / DSA
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-2.5 h-2.5 rounded-xs bg-teal-600"></span> Life & Care
+          </span>
+        </div>
+
+        {/* Stacked Bars */}
+        <div className="flex items-end justify-between gap-1.5 pt-3 h-32 border-b border-cream-deep pb-1">
+          {last7DaysData.map((d, idx) => {
+            const govPct = Math.min(100, (d.govM / maxDailyMins) * 100);
+            const mernPct = Math.min(100, (d.mernM / maxDailyMins) * 100);
+            const lifePct = Math.min(100, (d.lifeM / maxDailyMins) * 100);
+
+            return (
+              <div key={idx} className="flex-1 flex flex-col items-center h-full justify-end group">
+                <div className="text-[9px] font-bold text-bark-muted opacity-0 group-hover:opacity-100 transition-opacity mb-1 whitespace-nowrap">
+                  {d.totalM > 0 ? `${d.totalM}m` : "0m"}
+                </div>
+                <div className="w-full max-w-[24px] bg-cream-dark/60 rounded-t-md overflow-hidden flex flex-col-reverse justify-start h-20 transition-all group-hover:scale-105">
+                  <div style={{ height: `${govPct}%` }} className="bg-terra w-full" title={`Govt: ${d.govM}m`}></div>
+                  <div style={{ height: `${mernPct}%` }} className="bg-indigo-600 w-full" title={`MERN: ${d.mernM}m`}></div>
+                  <div style={{ height: `${lifePct}%` }} className="bg-teal-600 w-full" title={`Life: ${d.lifeM}m`}></div>
+                </div>
+                <span className={`text-[10px] font-bold mt-1.5 ${d.isToday ? "text-indigo-700 font-black" : "text-bark-muted"}`}>
+                  {d.dayLabel}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
 
