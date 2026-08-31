@@ -16,6 +16,8 @@ import {
   isToday,
   isFuture,
   nowTimeStr,
+  timeToMins,
+  minsToTime,
   getThreeMonths,
   daysUntilTarget,
   getHabitSummary,
@@ -34,6 +36,7 @@ import TaskDetailModal from "./components/TaskDetailModal";
 import StudySessionLogger from "./components/StudySessionLogger";
 import MentalModelsModal from "./components/MentalModelsModal";
 import ChronoAdvisor from "./components/ChronoAdvisor";
+import SmartCopilotAdvisor from "./components/SmartCopilotAdvisor";
 import BedtimeSummaryModal from "./components/BedtimeSummaryModal";
 import RevisionRadar from "./components/RevisionRadar";
 import EmergencyRescueModal from "./components/EmergencyRescueModal";
@@ -127,6 +130,43 @@ export default function App() {
 
     await save(todayStr, payload);
     setTrackerRefreshTrigger((prev) => prev + 1);
+  };
+
+  const handleShiftSchedule = async (shiftMins = 60) => {
+    const todayStr = fmtDate(new Date());
+    const dd = monthData[todayStr] || {};
+    const tasks = getDayTasks(todayStr, targetDate, dd);
+    const nowMins = timeToMins(nowTimeStr());
+
+    // Find the first uncompleted task from now onwards, or next pending task
+    let targetTask = tasks.find((t) => {
+      const taskTimeMins = timeToMins(t.time);
+      const isDone = t.trackable && dd?.habits?.[t.key];
+      return !isDone && taskTimeMins >= nowMins - 30;
+    });
+
+    if (!targetTask) {
+      targetTask = tasks.find((t) => t.trackable && !dd?.habits?.[t.key]) || tasks[0];
+    }
+
+    if (targetTask) {
+      const currentTaskMins = timeToMins(targetTask.time);
+      const newMins = currentTaskMins + shiftMins;
+      const newTimeStr = minsToTime(newMins);
+
+      const updatedPinned = {
+        ...(dd.pinnedTimes || {}),
+        [targetTask.key]: newTimeStr,
+      };
+
+      await save(todayStr, buildPayload(todayStr, { pinnedTimes: updatedPinned }));
+      showToast(
+        `🔄 Shifted schedule by +${shiftMins}m! (Next: ${targetTask.label} at ${newTimeStr})`,
+        "success"
+      );
+    } else {
+      showToast("No remaining tasks found to shift!", "info");
+    }
   };
 
   const showToast = useCallback((message, type = "info") => {
@@ -472,6 +512,7 @@ export default function App() {
               </button>
 
               <button
+                id="header-bedtime-btn"
                 onClick={() => setShowBedtimeSummary(true)}
                 className="px-3 py-1.5 bg-gradient-to-r from-indigo-950 to-purple-950 hover:from-indigo-900 hover:to-purple-900 text-white text-xs font-black rounded-lg flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
                 title="Bedtime Whole Day Review & Tomorrow's Improvement Compass"
@@ -492,6 +533,7 @@ export default function App() {
               </button>
 
               <button
+                id="header-books-btn"
                 onClick={() => setShowBooks(true)}
                 className="px-3 py-1.5 bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
                 title="View Recommended Books & Amazon Links"
@@ -638,10 +680,32 @@ export default function App() {
         <ChronoAdvisor
           onSelectTrack={(track) => {
             setActiveTrackerTab(track === "gov" ? "gov" : "mern");
+            const el = document.getElementById("master-trackers-section");
+            if (el) el.scrollIntoView({ behavior: "smooth" });
             showToast(`Switched view to ${track === "gov" ? "Government Exam" : "MERN & DSA"} Track`, "info");
           }}
           onOpenVault={() => setShowMentalVault(true)}
           onOpenBedtimeSummary={() => setShowBedtimeSummary(true)}
+        />
+
+        {/* AI DAILY COPILOT & SMART DECISION HUB */}
+        <SmartCopilotAdvisor
+          monthData={monthData}
+          todayStr={todayStr}
+          todaySched={todaySched}
+          todayTopic={todayTopic}
+          daysLeft={daysLeft}
+          onSelectTrack={(track) => {
+            setActiveTrackerTab(track === "gov" ? "gov" : "mern");
+            const el = document.getElementById("master-trackers-section");
+            if (el) el.scrollIntoView({ behavior: "smooth" });
+            showToast(`Switched view to ${track === "gov" ? "Government Exam" : "MERN & DSA"} Track`, "info");
+          }}
+          onOpenDrill={() => setShowRapidDrill(true)}
+          onOpenVault={() => setShowMentalVault(true)}
+          onOpenRescue={() => setShowRescueModal(true)}
+          onShiftSchedule={handleShiftSchedule}
+          showToast={showToast}
         />
 
         {/* TODAY SCHEDULE & CURRICULUM TIMELINE */}
@@ -828,7 +892,7 @@ export default function App() {
         </div>
 
         {/* SYLLABUS & TRACKER SECTION (TABS: MERN / GOV EXAM) */}
-        <div className="space-y-4">
+        <div id="master-trackers-section" className="space-y-4">
           <div className="flex items-center gap-2 border-b border-cream-deep pb-3">
             <button
               onClick={() => setActiveTrackerTab("mern")}

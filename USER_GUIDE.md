@@ -9,18 +9,19 @@ Welcome to your **All-In-One Dual-Track Preparation & Mastery Engine**! This app
 2. [Top Navigation Header & Action Hub](#2-top-navigation-header--action-hub)
 3. [Today's #1 Core Mission Active Widget](#3-todays-1-core-mission-active-widget)
 4. [ChronoAdvisor: Real-Time Circadian Brain Guide](#4-chronoadvisor-real-time-circadian-brain-guide)
-5. [Schedule Timetable & Distraction-Free Toggle](#5-schedule-timetable--distraction-free-toggle)
-6. [Quick Study Logger & Auto-Tick Engine](#6-quick-study-logger--auto-tick-engine)
-7. [Built-In 40Hz Gamma & Deep Focus Soundscapes](#7-built-in-40hz-gamma--deep-focus-soundscapes)
-8. [Spaced Repetition & Weakness Recall Radar](#8-spaced-repetition--weakness-recall-radar)
-9. [Master Syllabus Roadmaps (MERN & Govt Exam)](#9-master-syllabus-roadmaps-mern--govt-exam)
-10. [Sidebar Intelligence: Momentum Score & Track Balance](#10-sidebar-intelligence-momentum-score--track-balance)
-11. [Bedtime Whole-Day Review & Subconscious Priming](#11-bedtime-whole-day-review--subconscious-priming)
-12. [Emergency 15-Minute Day-Rescue Mode](#12-emergency-15-minute-day-rescue-mode)
-13. [60-Second Rapid-Fire Drill Simulator](#13-60-second-rapid-fire-drill-simulator)
-14. [Anti-Boredom & Mental Models Vault](#14-anti-boredom--mental-models-vault)
-15. [Book Recommendations & 1-Click Reading Logger](#15-book-recommendations--1-click-reading-logger)
-16. [Interactive 3-Month Habit Calendar](#16-interactive-3-month-habit-calendar)
+5. [AI Daily Copilot & Smart Decision Hub](#5-ai-daily-copilot--smart-decision-hub)
+6. [Schedule Timetable & Distraction-Free Toggle](#6-schedule-timetable--distraction-free-toggle)
+7. [Quick Study Logger & Auto-Tick Engine](#7-quick-study-logger--auto-tick-engine)
+8. [Built-In 40Hz Gamma & Deep Focus Soundscapes](#8-built-in-40hz-gamma--deep-focus-soundscapes)
+9. [Spaced Repetition & Weakness Recall Radar](#9-spaced-repetition--weakness-recall-radar)
+10. [Master Syllabus Roadmaps (MERN & Govt Exam)](#10-master-syllabus-roadmaps-mern--govt-exam)
+11. [Sidebar Intelligence: Momentum Score & Track Balance](#11-sidebar-intelligence-momentum-score--track-balance)
+12. [Bedtime Whole-Day Review & Subconscious Priming](#12-bedtime-whole-day-review--subconscious-priming)
+13. [Emergency 15-Minute Day-Rescue Mode](#13-emergency-15-minute-day-rescue-mode)
+14. [60-Second Rapid-Fire Drill Simulator](#14-60-second-rapid-fire-drill-simulator)
+15. [Anti-Boredom & Mental Models Vault](#15-anti-boredom--mental-models-vault)
+16. [Book Recommendations & 1-Click Reading Logger](#16-book-recommendations--1-click-reading-logger)
+17. [Interactive 3-Month Habit Calendar](#17-interactive-3-month-habit-calendar)
 
 ---
 
@@ -86,7 +87,39 @@ Located just below the mission banner, the **ChronoAdvisor** acts as your person
 
 ---
 
-## 5. Schedule Timetable & Distraction-Free Toggle
+## 5. AI Daily Copilot & Smart Decision Hub
+
+Located prominently in the main dashboard (`SmartCopilotAdvisor.jsx`), this is your **interactive, adaptive AI decision companion**.
+
+### What It Does:
+You can ask **any real-time question, state, or dilemma** (such as *"I want to sleep for 1 hour right now"*, *"I have 30m free before leaving"*, *"My brain is fried from coding"*, *"I missed my morning session"*), and the engine analyzes:
+1. Your real-time clock and current circadian energy window.
+2. Today's logged minutes across MERN vs. Govt exam tracks.
+3. Your sleep targets and remaining daily slots.
+4. Cognitive load mechanics (e.g. sleep inertia physics, prefrontal working memory burnout).
+
+### Key Features:
+- **Natural Language Query Bar**: Type your exact state in plain language.
+- **Quick Daily Dilemma Chips**: 1-click preset queries for:
+  - 💤 *Want to sleep for 1 hour* (Gives 25m Power Nap vs 90m Full REM Cycle advice to avoid 60m sleep inertia).
+  - ⚡ *Only 30m free right now* (Recommends high-yield rapid drills / 1 DSA logic question).
+  - 🧠 *Brain is fried / Mentally exhausted* (Switches to low-friction story lectures or Anti-Boredom analogies).
+  - ⏰ *Missed morning session* (Compresses schedule without guilt and shifts remaining blocks).
+  - ⚖️ *MERN vs Govt balance check* (Checks logged minutes and points to whichever track is falling behind).
+  - 🎲 *Too lazy to start* (Activates 2-Minute Rule dopamine micro-wins).
+- **Integrated Nap & Focus Live Timer**:
+  - In-card MM:SS countdown with presets (`15m`, `25m`, `60m`, `90m`).
+  - Integrated Web Audio soundscapes: 🌧️ Gentle Rain, 🟫 Brown Noise, 🧠 40Hz Gamma Beats.
+  - Automatic completion chime audio.
+- **1-Click Interactive Actions**:
+  - `[ ⏱️ Start Nap/Focus Timer ]`: Runs countdown immediately with audio.
+  - `[ 🔄 Shift Timetable (+1h / +30m) ]`: Automatically reschedules remaining timetable tasks.
+  - `[ 💻 Jump to MERN ]` / `[ 🏛️ Jump to Govt ]`: Automatically switches tabs and scrolls smoothly to track roadmaps.
+  - `[ 🥊 Launch 60s Drill ]` & `[ 💡 Open Anti-Boredom Vault ]`.
+
+---
+
+## 6. Schedule Timetable & Distraction-Free Toggle
 
 A full, chronologically organized interactive timetable of your ideal day.
 
