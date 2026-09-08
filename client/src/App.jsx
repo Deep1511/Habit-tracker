@@ -42,6 +42,7 @@ import RevisionRadar from "./components/RevisionRadar";
 import EmergencyRescueModal from "./components/EmergencyRescueModal";
 import RapidDrillModal from "./components/RapidDrillModal";
 import MorningSession from "./components/MorningSession";
+import MasterSchedule24H from "./components/MasterSchedule24H";
 
 export default function App() {
   const cachedSettings = getLocalCache("settings", {});
@@ -90,7 +91,24 @@ export default function App() {
   const [showRapidDrill, setShowRapidDrill] = useState(false);
   const [activeTrackerTab, setActiveTrackerTab] = useState("mern"); // 'mern' | 'gov'
   const [trackerRefreshTrigger, setTrackerRefreshTrigger] = useState(0);
+  const [use24HourMasterSchedule, setUse24HourMasterSchedule] = useState(() => {
+    return localStorage.getItem("use_24h_master_schedule") === "true";
+  });
   const months = getThreeMonths();
+
+  const toggleUse24HourMasterSchedule = () => {
+    setUse24HourMasterSchedule((prev) => {
+      const next = !prev;
+      localStorage.setItem("use_24h_master_schedule", String(next));
+      showToast(
+        next
+          ? "📅 Switched timetable to 24-Hour Master Schedule (6h Sleep • SSC CGL)"
+          : "📅 Restored default adaptive daily schedule",
+        "info"
+      );
+      return next;
+    });
+  };
 
   const handleSaveRescueSession = async (sessionData) => {
     const todayStr = fmtDate(new Date());
@@ -422,9 +440,11 @@ export default function App() {
   const daysLeft = targetDate ? daysUntilTarget(targetDate) : 0;
   const todayStr = fmtDate(new Date());
   const todayTasks = targetDate
-    ? getDayTasks(todayStr, targetDate, monthData[todayStr])
+    ? getDayTasks(todayStr, targetDate, monthData[todayStr], use24HourMasterSchedule ? "master24h" : null)
     : [];
-  const todaySched = targetDate ? getSchedule(todayStr, targetDate) : null;
+  const todaySched = targetDate
+    ? getSchedule(todayStr, targetDate, use24HourMasterSchedule ? "master24h" : null)
+    : null;
   const todayTopic = getTopicForDay(todayStr);
 
   return (
@@ -555,6 +575,19 @@ export default function App() {
               >
                 <i className="fa-solid fa-book-open text-purple-600"></i>
                 <span className="hidden sm:inline">Book List</span>
+              </button>
+
+              <button
+                id="header-24h-schedule-btn"
+                onClick={() => {
+                  const el = document.getElementById("master-24h-schedule-section");
+                  if (el) el.scrollIntoView({ behavior: "smooth" });
+                }}
+                className="px-3 py-1.5 bg-amber-50 text-amber-900 hover:bg-amber-100 border border-amber-300 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+                title="Jump to The Complete 24-Hour Master Schedule"
+              >
+                <i className="fa-solid fa-calendar-days text-amber-600"></i>
+                <span className="hidden sm:inline">24H Master Schedule</span>
               </button>
 
               <div className="flex flex-col items-end gap-1">
@@ -731,6 +764,16 @@ export default function App() {
           showToast={showToast}
         />
 
+        {/* 📅 24-HOUR MASTER SCHEDULE (6 HOURS SLEEP • ZERO MERN • SSC CGL PRIME FOCUS) */}
+        <MasterSchedule24H
+          todayStr={todayStr}
+          dayData={monthData[todayStr] || {}}
+          onToggleHabit={toggleHabit}
+          showToast={showToast}
+          isActiveSchedule={use24HourMasterSchedule}
+          onActivateSchedule={toggleUse24HourMasterSchedule}
+        />
+
         {/* TODAY SCHEDULE & CURRICULUM TIMELINE */}
         <section className="bg-white rounded-2xl border border-cream-deep p-4 sm:p-5 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
@@ -757,6 +800,20 @@ export default function App() {
             </div>
 
             <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={toggleUse24HourMasterSchedule}
+                className={`px-2.5 py-1 rounded-lg border text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  use24HourMasterSchedule
+                    ? "bg-amber-100 text-amber-900 border-amber-300 font-extrabold"
+                    : "border-cream-deep text-bark-muted hover:text-bark hover:bg-cream/60"
+                }`}
+                title="Toggle between default adaptive schedule and 24-hour master schedule"
+              >
+                <i className="fa-solid fa-clock text-[10px]"></i>
+                <span>{use24HourMasterSchedule ? "24H Master Active" : "Use 24H Master"}</span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => setShowTimeline(!showTimeline)}
