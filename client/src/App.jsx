@@ -41,6 +41,7 @@ import BedtimeSummaryModal from "./components/BedtimeSummaryModal";
 import RevisionRadar from "./components/RevisionRadar";
 import EmergencyRescueModal from "./components/EmergencyRescueModal";
 import RapidDrillModal from "./components/RapidDrillModal";
+import MorningSession from "./components/MorningSession";
 
 export default function App() {
   const cachedSettings = getLocalCache("settings", {});
@@ -533,6 +534,20 @@ export default function App() {
               </button>
 
               <button
+                id="header-morning-btn"
+                onClick={() => {
+                  const el = document.getElementById("morning-session-section");
+                  if (el) el.scrollIntoView({ behavior: "smooth" });
+                }}
+                className="px-3 py-1.5 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-600 hover:from-amber-600 hover:to-rose-700 text-white text-xs font-black rounded-lg flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                title="4:30 AM Morning Protocol & 30-Min Cardio Routine"
+              >
+                <span>🌅</span>
+                <span className="hidden sm:inline">Morning Session</span>
+                <span className="sm:hidden">Morning</span>
+              </button>
+
+              <button
                 id="header-books-btn"
                 onClick={() => setShowBooks(true)}
                 className="px-3 py-1.5 bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
@@ -705,6 +720,14 @@ export default function App() {
           onOpenVault={() => setShowMentalVault(true)}
           onOpenRescue={() => setShowRescueModal(true)}
           onShiftSchedule={handleShiftSchedule}
+          showToast={showToast}
+        />
+
+        {/* 🌅 4:30 AM MORNING SESSION & 30-MIN CARDIO POWER PROTOCOL */}
+        <MorningSession
+          todayStr={todayStr}
+          dayData={monthData[todayStr] || {}}
+          onToggleHabit={toggleHabit}
           showToast={showToast}
         />
 

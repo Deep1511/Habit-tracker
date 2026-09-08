@@ -80,6 +80,354 @@ export const CAT_STYLES = {
   },
 };
 
+// ── 🌅 4:30 AM Morning Session Protocol & Cardio Routine ───────
+
+export const MORNING_SESSION_PROTOCOL = [
+  {
+    id: "wake_hydrate",
+    time: "4:30 AM – 4:45 AM",
+    timeStart: "4:30 AM",
+    timeEnd: "4:45 AM",
+    durMins: 15,
+    title: "Wake Up & Hydrate",
+    activity: "Wash face, light mobility stretches.",
+    drink: "1 glass of lukewarm water.",
+    drinkDetails: "Lukewarm water restores cellular hydration after sleep, stimulates digestive peristalsis, and flushes metabolic waste without shocking the system.",
+    emojis: "🌅 💧 🧼 🧘‍♂️",
+    badge: "Awakening & Hydration",
+    theme: "amber",
+    key: "morningWake",
+    trackable: true,
+    actionSteps: [
+      "Wake up immediately at 4:30 AM without hitting snooze.",
+      "Wash face with cool water to signal wakefulness to ocular nerves.",
+      "Perform 3 minutes of gentle mobility: neck circles, cat-cow, and calf stretches.",
+      "Drink 1 full glass of lukewarm water slowly while sitting upright."
+    ],
+  },
+  {
+    id: "study_session_1",
+    time: "4:45 AM – 6:30 AM",
+    timeStart: "4:45 AM",
+    timeEnd: "6:30 AM",
+    durMins: 105,
+    durLabel: "1 hr 45 mins",
+    title: "Study Session 1: Peak Brain Focus Window",
+    activity: "Your peak brain focus window. Uninterrupted deep study on toughest subjects.",
+    drink: "Black Coffee at 4:45 AM, followed by gradual sips of water.",
+    drinkDetails: "Caffeine blocks adenosine fatigue receptors, spiking dopamine and norepinephrine right as cortisol peaks. Keep water nearby for steady micro-hydration.",
+    emojis: "🧠 ☕ 📚 ⚡",
+    badge: "Peak Cognitive Window",
+    theme: "indigo",
+    key: "morningStudy1",
+    trackable: true,
+    actionSteps: [
+      "Brew hot black coffee at 4:45 AM (zero sugar, zero dairy).",
+      "Put phone in another room or on 'Do Not Disturb'.",
+      "Tackle your most demanding concept: Striver DSA complex algorithms or Gov Exam Quantitative Aptitude.",
+      "Work in deep flow for 105 uninterrupted minutes."
+    ],
+  },
+  {
+    id: "cardio_workout",
+    time: "6:30 AM – 7:00 AM",
+    timeStart: "6:30 AM",
+    timeEnd: "7:00 AM",
+    durMins: 30,
+    durLabel: "30 mins",
+    title: "Cardio & Core Workout: Belly & Chest Toning",
+    activity: "Fast-paced movement to burn fat. High-Low Intensity Cardio Circuit.",
+    drink: "No large drinks (small sips of water only if needed).",
+    drinkDetails: "Avoid chugging water before cardio to prevent stomach cramping, reflux, or sluggishness. Only wet your mouth with small sips if thirsty.",
+    emojis: "🏃‍♂️ 🔥 🥊 🥋 🧱",
+    badge: "Fat-Burning & Toning",
+    theme: "terra",
+    key: "morningCardio",
+    trackable: true,
+    actionSteps: [
+      "Put on proper training shoes and open a window for cool morning air.",
+      "Execute the 30-minute High-Low Cardio Routine (Warm-up, Power Walking, Circuit, Plank Finisher, Cool Down).",
+      "Focus on chest squeeze and belly contraction on every movement."
+    ],
+  },
+  {
+    id: "study_session_2",
+    time: "7:00 AM – 7:40 AM",
+    timeStart: "7:00 AM",
+    timeEnd: "7:40 AM",
+    durMins: 40,
+    durLabel: "40 mins",
+    title: "Study Session 2: Practice Problems & Review",
+    activity: "Reviewing or solving practice problems. Post-workout neuroplasticity window.",
+    drink: "Coconut water or electrolyte water to recover.",
+    drinkDetails: "Restores essential potassium, sodium, and magnesium depleted during sweat. Hydrates brain cells for rapid mental calculation and error correction.",
+    emojis: "📝 🥥 🎯 ⚡",
+    badge: "Neuroplasticity Sprint",
+    theme: "teal",
+    key: "morningStudy2",
+    trackable: true,
+    actionSteps: [
+      "Drink a chilled glass of fresh coconut water or electrolyte water.",
+      "Capitalize on post-cardio BDNF (Brain-Derived Neurotrophic Factor).",
+      "Review mistakes from Session 1, solve 10-15 rapid speed questions, or test flashcards.",
+      "Anchor learned concepts while memory consolidation is accelerated."
+    ],
+  },
+  {
+    id: "bath_recovery",
+    time: "7:40 AM onwards",
+    timeStart: "7:40 AM",
+    timeEnd: "8:00 AM",
+    durMins: 20,
+    title: "Bath / Shower & Recovery",
+    activity: "Helps lower your core temperature and relax muscles.",
+    drink: "Normal hydration.",
+    drinkDetails: "Sip room-temperature water steadily. Promotes metabolic equilibrium and cellular nutrient transportation.",
+    emojis: "🚿 🧊 👕 🧼",
+    badge: "Temperature Reset & Grooming",
+    theme: "mint",
+    key: "morningBath",
+    trackable: true,
+    actionSteps: [
+      "Take a refreshing warm shower to wash off sweat and soothe muscle fibers.",
+      "Finish with 30-60 seconds of cold water to trigger norepinephrine and long-lasting alertness.",
+      "Dress in clean, structured attire to prime professional discipline for the day."
+    ],
+  },
+];
+
+export const CARDIO_ROUTINE_DATA = {
+  title: "Your 30-Minute Belly & Chest Toning Cardio Routine",
+  overview:
+    "Since you love walking and normal cardio, we will use a High-Low Intensity Structure. This keeps your heart rate in the fat-burning zone without exhausting you.",
+  time: "6:30 AM – 7:00 AM",
+  totalMins: 30,
+  phases: [
+    {
+      id: "warmup_walk",
+      name: "Warm-up Walk",
+      timeRange: "0:00 – 0:05",
+      durMins: 5,
+      durSecs: 300,
+      emoji: "🚶‍♂️",
+      icon: "fa-person-walking",
+      badge: "Low Intensity • Joint Prep",
+      intensity: "Low (RPE 3-4)",
+      target: "Joints, Knees, Ankles, Blood Flow",
+      description: "Walk at a normal, comfortable pace to get blood flowing to your joints.",
+      exerciseActions: [
+        {
+          title: "Comfortable Pace",
+          cue: "Walk at a steady, easy pace. Let your breathing remain completely relaxed and natural.",
+          emoji: "🚶‍♂️",
+        },
+        {
+          title: "Shoulder & Upper Back Roll",
+          cue: "Roll your shoulders back in wide circles 10 times to release chest stiffness.",
+          emoji: "🔄",
+        },
+        {
+          title: "Gentle Joint Mobilization",
+          cue: "Loosen your wrists, roll your ankles, and let blood flow down to your calves.",
+          emoji: "🦶",
+        },
+      ],
+      formChecklist: [
+        "Normal comfortable walking cadence",
+        "Deep nasal breathing to saturate bloodstream with oxygen",
+        "Shoulders relaxed away from ears",
+      ],
+    },
+    {
+      id: "power_walking",
+      name: "Power Walking (Chest & Shoulder Pump)",
+      timeRange: "0:05 – 0:15",
+      durMins: 10,
+      durSecs: 600,
+      emoji: "🏃‍♂️💨",
+      icon: "fa-person-walking-arrow-right",
+      badge: "Aerobic Fat Burn • Chest Activation",
+      intensity: "Moderate-High (RPE 6-7)",
+      target: "Chest (Pectorals), Anterior Shoulders, Upper Back & Core",
+      description:
+        "Walk as fast as you can. Pump your arms vigorously forward and backward—this actively engages your chest and shoulder muscles.",
+      exerciseActions: [
+        {
+          title: "Branded 90° Arm Drive",
+          cue: "Lock elbows strictly at 90 degrees. Pump your hands from hip pocket up to chest level with power.",
+          emoji: "💪",
+        },
+        {
+          title: "Chest Squeeze on Swing",
+          cue: "Actively contract your pectoral muscles as your arm drives forward across your mid-chest.",
+          emoji: "🫁",
+        },
+        {
+          title: "Fast-Paced Foot Cadence",
+          cue: "Short, quick strides landing on the balls of your feet. Walk as fast as possible without jogging.",
+          emoji: "⚡",
+        },
+      ],
+      formChecklist: [
+        "Elbows bent at 90° and driving forcefully",
+        "Torso upright with chest lifted high",
+        "Glutes and lower belly gently tucked in",
+      ],
+    },
+    {
+      id: "cardio_circuit",
+      name: "Fat-Burning Cardio Circuit (2 Rounds)",
+      timeRange: "0:15 – 0:25",
+      durMins: 10,
+      durSecs: 600,
+      emoji: "🔥🥊",
+      icon: "fa-fire",
+      badge: "High-Low Intervals • Belly & Chest Sculpting",
+      intensity: "High Intensity (45s Work / 15s Rest)",
+      target: "Lower Belly Fat, Obliques, Chest & Full Body Fat Burn",
+      description:
+        "Do each movement for 45 seconds, then rest for 15 seconds. Repeat the circuit twice (2 full rounds = 8 intervals).",
+      circuitStructure: "4 Exercises × 45s Work / 15s Rest × 2 Rounds",
+      exercises: [
+        {
+          id: "jumping_jacks",
+          name: "Jumping Jacks",
+          emoji: "🤸‍♂️",
+          workSecs: 45,
+          restSecs: 15,
+          targetZone: "Overall Body Fat & Chest Expansion",
+          benefit: "Excellent for burning overall body fat and opening up the chest.",
+          actionCue:
+            "Jump feet wide while clapping arms overhead with a deliberate chest expansion. Land softly on balls of feet.",
+          coachingPoints: [
+            "Land with soft, unlocked knees to protect joints.",
+            "Open your arms wide like a flying bird to dynamically stretch pectorals.",
+            "Keep core engaged so your lower back does not arch.",
+          ],
+        },
+        {
+          id: "high_knees",
+          name: "High Knees",
+          emoji: "🦵⚡",
+          workSecs: 45,
+          restSecs: 15,
+          targetZone: "Lower Belly Fat & Deep Core",
+          benefit: "Targets lower belly fat by forcing your core to stabilize on every single stride.",
+          actionCue:
+            "Drive your knees up towards hip height, alternating rapidly. Pump your arms in opposition.",
+          coachingPoints: [
+            "Brace your abdominal wall as if bracing for a sneeze.",
+            "Do not lean backwards—keep your torso slightly forward.",
+            "Stay light on the balls of your feet like a boxer.",
+          ],
+        },
+        {
+          id: "shadow_boxing",
+          name: "Shadow Boxing",
+          emoji: "🥊🔥",
+          workSecs: 45,
+          restSecs: 15,
+          targetZone: "Belly Fat Twists & Chest Toning",
+          benefit: "Throw fast punches into the air. Twisting your torso burns belly fat, while punching tones the chest.",
+          actionCue:
+            "Athletic stance. Throw fast 1-2 straight punches (Jab + Cross). Twist your hips and torso aggressively on every punch.",
+          coachingPoints: [
+            "Full torso rotation—the power and belly burn come from the hip twist!",
+            "Snap punches back quickly to chin level to maintain chest tension.",
+            "Breathe out sharply with each punch ('tss!') for deep core engagement.",
+          ],
+        },
+        {
+          id: "standing_side_crunches",
+          name: "Standing Side Crunches",
+          emoji: "🥋💥",
+          workSecs: 45,
+          restSecs: 15,
+          targetZone: "Side Abdominals & Love Handles",
+          benefit: "Bring your elbow down to meet your rising knee to target your side abdominal muscles (love handles).",
+          actionCue:
+            "Fingertips behind head, elbows wide. Bring your elbow down sideways to meet your rising knee, crunching the oblique.",
+          coachingPoints: [
+            "Drive knee out to the side, NOT straight forward.",
+            "Squeeze and hold for 0.5s at the peak contraction.",
+            "Alternate sides or switch at 22 seconds for maximum oblique burn.",
+          ],
+        },
+      ],
+    },
+    {
+      id: "plank_finisher",
+      name: "The Plank Finisher",
+      timeRange: "0:25 – 0:28",
+      durMins: 3,
+      durSecs: 180,
+      emoji: "🧘‍♂️🧱",
+      icon: "fa-shield-halved",
+      badge: "Isometric Core Tension",
+      intensity: "High Core Hold (45s Hold / 15s Rest × 3)",
+      target: "Transversus Abdominis, Deep Belly Flattening & Core Stability",
+      description: "Move to the floor for your core work. Locks in rock-solid abdominal tension.",
+      exerciseActions: [
+        {
+          title: "Forearm Plank Stance",
+          cue: "Place forearms parallel on the floor, elbows stacked directly under your shoulders.",
+          emoji: "🧱",
+        },
+        {
+          title: "Glute & Core Vacuum",
+          cue: "Squeeze glutes tightly and pull your belly button towards your spine to create a rigid plank.",
+          emoji: "🛡️",
+        },
+        {
+          title: "Neutral Spine Alignment",
+          cue: "Look at the floor 6 inches ahead of your hands. Do NOT let your hips sag or hike up high.",
+          emoji: "📐",
+        },
+      ],
+      formChecklist: [
+        "Straight line from crown of head to heels",
+        "Glutes clamped tight to protect lower back",
+        "Steady nasal breathing without holding breath",
+      ],
+    },
+    {
+      id: "cooldown",
+      name: "Cool Down & Heart Rate Reset",
+      timeRange: "0:28 – 0:30",
+      durMins: 2,
+      durSecs: 120,
+      emoji: "🌬️🧘",
+      icon: "fa-wind",
+      badge: "Parasympathetic Recovery",
+      intensity: "Very Low (RPE 1-2)",
+      target: "Heart Rate Reduction, Autonomic Calm, Chest Opener",
+      description: "Slow walking and deep breathing to bring your heart rate down before studying.",
+      exerciseActions: [
+        {
+          title: "Casual Slow Stroll",
+          cue: "Walk very slowly around the room, shaking out your hands, arms, and calves.",
+          emoji: "🚶",
+        },
+        {
+          title: "Box & 4-7-8 Breathing",
+          cue: "Inhale 4s through nose, hold 2s, exhale slowly 6s through lips. Drops heart rate fast.",
+          emoji: "🌬️",
+        },
+        {
+          title: "Chest Opener Stretch",
+          cue: "Clasp hands behind your lower back, gently squeeze shoulder blades and lift hands to stretch chest.",
+          emoji: "🧘",
+        },
+      ],
+      formChecklist: [
+        "Heart rate returning towards resting baseline",
+        "Chest muscles elongated and relaxed",
+        "Calm, grounded mental state ready for Study Session 2",
+      ],
+    },
+  ],
+};
+
 // ── Daily 15-Minute Rotating Brain Fresh-Up & Neuro Activation ─
 
 export const BRAIN_FRESHUP_TASKS = {
@@ -1573,6 +1921,57 @@ export const TASK_GUIDES = {
     outcome: "Deep REM & slow-wave sleep for memory consolidation and cellular repair.",
     checklist: ["In bed by 12:30 AM", "5.5h sleep goal achieved"],
   },
+  morningWake: {
+    title: "Wake Up & Hydrate (4:30 AM)",
+    desc: "Rise immediately at 4:30 AM. Wash face, perform light mobility stretches, and drink 1 glass of lukewarm water to rehydrate cells.",
+    tips: [
+      "Drink water sitting down, not standing, to assist digestive flow.",
+      "Gentle neck, spine, and calf stretches to wake up nervous system."
+    ],
+    outcome: "Immediate physical alertness and digestive activation without shock.",
+    checklist: ["Out of bed at 4:30 AM", "Face washed", "1 glass lukewarm water"],
+  },
+  morningStudy1: {
+    title: "Study Session 1: Peak Brain Focus (4:45 AM – 6:30 AM)",
+    desc: "1 hr 45 mins uninterrupted prime cognitive window. Clean prefrontal cortex, zero notifications, black coffee at 4:45 AM.",
+    tips: [
+      "Dedicate this block to your hardest topic (DSA hard patterns or complex Gov Exam reasoning/quant).",
+      "Black coffee right at 4:45 AM, followed by gradual water sips."
+    ],
+    outcome: "Deep mastery of 1 difficult topic during peak neurochemical alertness.",
+    checklist: ["Black coffee consumed", "105 mins deep focus", "No phone distractions"],
+  },
+  morningCardio: {
+    title: "Cardio & Core Workout: 30-Min High-Low Routine (6:30 AM)",
+    desc: "Fast-paced fat burn: 5m Warm-up Walk, 10m Power Walk, 10m Cardio Circuit (Jumping Jacks, High Knees, Shadow Boxing, Side Crunches), 3m Plank Finisher, 2m Cool Down.",
+    tips: [
+      "No large drinks right before cardio—small sips of water only.",
+      "Vigorous 90-degree arm pump during power walk to tone chest and shoulders.",
+      "Torso rotation in shadow boxing and high knees to blast belly fat."
+    ],
+    outcome: "Elevated calorie burn, sculpted chest & obliques, and endorphin surge.",
+    checklist: ["5m Warm-up Walk", "10m Power Walk", "10m Cardio Circuit (2 rounds)", "3m Plank Finisher", "2m Cool Down"],
+  },
+  morningStudy2: {
+    title: "Study Session 2: Practice Problems & Review (7:00 AM – 7:40 AM)",
+    desc: "40-minute post-cardio neuroplasticity sprint. Coconut water or electrolyte water to rehydrate brain and muscles.",
+    tips: [
+      "Sip chilled coconut water or electrolytes to replenish sodium and potassium.",
+      "Solve rapid practice problems, review error logs from Session 1, or active recall cards."
+    ],
+    outcome: "Reinforced conceptual retention during the post-exercise BDNF neuroplasticity window.",
+    checklist: ["Coconut / electrolyte water", "Practice problems solved", "Mistakes reviewed"],
+  },
+  morningBath: {
+    title: "Bath / Shower & Recovery (7:40 AM onwards)",
+    desc: "Soothing bath/shower to lower core body temperature, relax muscles, wash off sweat, and groom for daily success.",
+    tips: [
+      "End shower with 30-60s cool splash to lock in dopamine and alertness.",
+      "Normal room-temperature hydration."
+    ],
+    outcome: "Lowered core body temp, clean muscle relaxation, and disciplined grooming.",
+    checklist: ["Shower complete", "Cold splash finish", "Groomed & ready"],
+  },
 };
 
 // ── Build the full task list for a day ──────────────────────
@@ -1734,7 +2133,7 @@ export function getHabitSummary(dateStr, targetDate, dayData, startDate = START_
     reading: !!h.reading || !!h.bookReading,
     brain: !!h.brainFreshup || !!h.brain,
     sleep: !!h.sleepGoal,
-    exercise: !!h.exercise,
+    exercise: !!h.exercise || !!h.morningCardio,
     total: trackable.length,
     done: trackable.filter((t) => h[t.key]).length,
     allDone: trackable.length > 0 && trackable.every((t) => h[t.key]),
