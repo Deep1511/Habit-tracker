@@ -164,6 +164,42 @@ const getBurger = async () => {
 };`,
     takeaway: "In your notebook: Promise = Buzzer token. Await = Sit at table until buzzer vibrates.",
   },
+  {
+    id: "vector_embeddings",
+    category: "Generative AI",
+    topic: "Vector Embeddings & Semantic Similarity",
+    difficulty: "Core GenAI",
+    icon: "fa-compass",
+    color: "purple",
+    textbookDef: "Mathematical high-dimensional numerical vectors that represent semantic meaning, allowing distance metrics (Cosine similarity) to measure conceptual closeness.",
+    analogy: "GPS Coordinates in the Infinite Galaxy of Meaning 🌌",
+    explanation: "Normal keyword search is like looking for the exact spelling 'King'. Vector embeddings convert meaning into GPS coordinates: 'King' - 'Man' + 'Woman' lands precisely at 'Queen' in 1536-dimensional space. Even if you type 'canine companion', the vector distance places it right next to 'golden retriever'!",
+    codeSnippet: `// Convert text to high-dimensional float array
+const vector = await openai.embeddings.create({
+  model: "text-embedding-3-small",
+  input: "MERN full stack developer with AI agents experience",
+});
+// Similarity = cosineDistance(vectorA, vectorB) -> 0.94 (Almost identical!)`,
+    takeaway: "In your notebook: Vectors = GPS coordinates where words with similar meaning sit on the same street.",
+  },
+  {
+    id: "rag_architecture",
+    category: "Generative AI",
+    topic: "RAG (Retrieval-Augmented Generation)",
+    difficulty: "Core GenAI",
+    icon: "fa-book-open-reader",
+    color: "rose",
+    textbookDef: "An architecture that retrieves relevant factual context from an external knowledge base and injects it into the LLM prompt to prevent hallucinations.",
+    analogy: "The Open-Book Exam with an Ultra-Fast Librarian 📚",
+    explanation: "A plain LLM is like a student taking a closed-book test based on what they memorized last year—they will guess confidently even if wrong (hallucination). RAG is having an Olympian librarian (Vector DB). When asked a question, the librarian runs to the shelf, grabs the 3 exact pages needed, hands them to the student, and says: 'Answer ONLY based on these 3 pages!'",
+    codeSnippet: `// 1. Retrieve top-k chunks from Vector DB
+const contextChunks = await pinecone.query({ vector: queryVector, topK: 3 });
+// 2. Augment prompt with context
+const prompt = \`Context: \${contextChunks.join("\\n")}\\nUser Question: \${query}\`;
+// 3. Generate grounded answer
+const response = await llm.generate(prompt);`,
+    takeaway: "In your notebook: RAG = Closed-book guesser + Ultra-fast librarian handing exact reference pages.",
+  },
 ];
 
 export const ANTI_LAZINESS_HACKS = [
@@ -197,15 +233,15 @@ export const ANTI_LAZINESS_HACKS = [
   },
   {
     id: "rule_dopamine",
-    title: "Dopamine Stacking: Government Exam ➡️ MERN Sprint",
+    title: "Dopamine Stacking: Quick GenAI Win ➡️ Deep MERN Sprint",
     icon: "fa-layer-group",
-    color: "terra",
-    subtitle: "Use your easy momentum to crush hard coding topics",
-    summary: "Government lectures feel easier to complete (70-80%). Use that easy win to prime your dopamine before tackling technical coding.",
+    color: "purple",
+    subtitle: "Use quick AI experimentation momentum to crush hard coding topics",
+    summary: "Running a prompt in Google AI Studio or testing a vector distance gives a fast, exciting win (100% success). Use that win to prime your dopamine before tackling heavy technical architecture.",
     steps: [
-      "Start your morning with 30-45 minutes of a Government Exam lecture or GK quiz.",
-      "Completing it gives your brain an immediate feeling of accomplishment (Dopamine hit).",
-      "Do NOT leave your desk! Immediately switch the track dropdown to MERN Stack.",
+      "Start your session with 10-15 minutes of testing a quick LLM prompt, curl call, or vector embedding.",
+      "Seeing the AI output gives your brain an immediate feeling of accomplishment (Dopamine hit).",
+      "Do NOT open Instagram or browse your phone! Immediately switch the track to MERN Stack & DSA.",
       "Ride the existing work momentum to knock out 1 coding topic while your brain is already hot.",
     ],
   },
@@ -250,7 +286,7 @@ export const MOTIVATIONAL_SPARKS = [
     quote: "Small disciplines repeated with consistency every day lead to great achievements gained slowly over time.",
     author: "John C. Maxwell",
     context: "Even if you only complete 1 topic today, in 60 days that's 60 interview topics mastered!",
-    trackTip: "🏛️ Govt Tip: Solve just 5 quantitative aptitude questions.",
+    trackTip: "🤖 GenAI Tip: Run a quick vector search or test 1 ReAct agent prompt.",
   },
   {
     quote: "Action isn't just the effect of motivation; it is also the cause of it.",

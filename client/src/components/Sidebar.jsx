@@ -37,7 +37,7 @@ export default function Sidebar({
   const dayOfWeek = today.getDay();
   const weekStart = new Date(today);
   weekStart.setDate(today.getDate() - dayOfWeek);
-  const ws = { gov: 0, mern: 0, exercise: 0, pooja: 0, reading: 0, sleep: 0, total: 0 };
+  const ws = { genai: 0, mern: 0, detox: 0, exercise: 0, pooja: 0, reading: 0, sleep: 0, total: 0 };
   for (let i = 0; i < 7; i++) {
     const d = new Date(weekStart);
     d.setDate(weekStart.getDate() + i);
@@ -45,8 +45,9 @@ export default function Sidebar({
     if (ds < startDate) continue;
     if (ds > fmtDate(today)) continue;
     const s = getHabitSummary(ds, targetDate, monthData[ds], startDate);
-    if (s.gov) ws.gov++;
+    if (s.genai || s.gov) ws.genai++;
     if (s.mern) ws.mern++;
+    if (s.detox) ws.detox++;
     if (s.exercise) ws.exercise++;
     if (s.pooja) ws.pooja++;
     if (s.reading) ws.reading++;
@@ -64,14 +65,14 @@ export default function Sidebar({
     const logs = dayObj.studyLogs || [];
 
     let mernM = logs.filter((l) => l.track === "mern").reduce((acc, l) => acc + (Number(l.minutes) || 0), 0);
-    let govM = logs.filter((l) => l.track === "gov").reduce((acc, l) => acc + (Number(l.minutes) || 0), 0);
+    let genaiM = logs.filter((l) => l.track === "genai" || l.track === "gov").reduce((acc, l) => acc + (Number(l.minutes) || 0), 0);
     let lifeM = logs.filter((l) => l.track === "life").reduce((acc, l) => acc + (Number(l.minutes) || 0), 0);
 
     if (mernM === 0 && dayObj.mernMinutes) {
       mernM = dayObj.mernMinutes;
     }
 
-    const totalM = mernM + govM + lifeM;
+    const totalM = mernM + genaiM + lifeM;
     const dayLabel = d.toLocaleDateString("en-US", { weekday: "narrow" });
     const isToday = i === 0;
 
@@ -79,7 +80,7 @@ export default function Sidebar({
       dateStr: ds,
       dayLabel,
       mernM,
-      govM,
+      genaiM,
       lifeM,
       totalM,
       totalHrs: (totalM / 60).toFixed(1),
@@ -91,14 +92,14 @@ export default function Sidebar({
 
   const consistencyDays = last7DaysData.filter((d) => d.totalM > 0).length;
   const mernWeekMins = last7DaysData.reduce((acc, d) => acc + d.mernM, 0);
-  const govWeekMins = last7DaysData.reduce((acc, d) => acc + d.govM, 0);
+  const genaiWeekMins = last7DaysData.reduce((acc, d) => acc + d.genaiM, 0);
   const lifeWeekMins = last7DaysData.reduce((acc, d) => acc + d.lifeM, 0);
-  const totalWeekMins = mernWeekMins + govWeekMins + lifeWeekMins;
+  const totalWeekMins = mernWeekMins + genaiWeekMins + lifeWeekMins;
 
   const consistencyScore = Math.min(100, Math.round((consistencyDays / 7) * 100));
   const ratio =
-    mernWeekMins > 0 && govWeekMins > 0
-      ? Math.min(mernWeekMins, govWeekMins) / Math.max(mernWeekMins, govWeekMins)
+    mernWeekMins > 0 && genaiWeekMins > 0
+      ? Math.min(mernWeekMins, genaiWeekMins) / Math.max(mernWeekMins, genaiWeekMins)
       : 0.3;
   const balanceScore = totalWeekMins > 0 ? Math.round(50 + ratio * 50) : 0;
   const momentumScore = Math.min(
@@ -108,13 +109,13 @@ export default function Sidebar({
 
   let coachingTip = "⚡ Solid balance! Aim for 120+ mins daily to keep momentum in the 90s.";
   if (totalWeekMins === 0) {
-    coachingTip = "🌱 Start with a 15-Min Rescue Sprint today to ignite your weekly momentum engine.";
-  } else if (mernWeekMins === 0 && govWeekMins > 0) {
-    coachingTip = "⚠️ MERN Gap: Add 60 mins tomorrow 9:30 AM on Striver DSA to maintain technical sharpness.";
-  } else if (govWeekMins === 0 && mernWeekMins > 0) {
-    coachingTip = "⚠️ Govt Gap: Add 45 mins speed-math & reasoning tomorrow morning to keep exam speed high.";
+    coachingTip = "🌱 Start with a 15-Min Micro Sprint today to ignite your weekly momentum engine.";
+  } else if (mernWeekMins === 0 && genaiWeekMins > 0) {
+    coachingTip = "⚠️ MERN Gap: Add 60 mins tomorrow morning on Striver DSA to maintain technical sharpness.";
+  } else if (genaiWeekMins === 0 && mernWeekMins > 0) {
+    coachingTip = "⚠️ GenAI Gap: Add 45 mins RAG & AI Agent architecture tomorrow evening.";
   } else if (momentumScore >= 85) {
-    coachingTip = "🔥 Elite Momentum: Dual-track velocity is dialed in. Keep executing morning Striver + Govt mock.";
+    coachingTip = "🔥 Elite Momentum: Dual-track velocity dialed in! Screen time low & technical execution peak.";
   }
 
   const todayStr = fmtDate(today);
@@ -135,10 +136,16 @@ export default function Sidebar({
       icon: "fa-laptop-code",
     },
     {
-      label: "Gov Exam Study",
-      streak: streaks.gov || 0,
-      color: "terra",
-      icon: "fa-book-bookmark",
+      label: "GenAI & AI Agents",
+      streak: streaks.genai || streaks.gov || 0,
+      color: "purple",
+      icon: "fa-brain",
+    },
+    {
+      label: "Digital Detox (< 30m)",
+      streak: streaks.detox || streaks.screenTimeDetox || 0,
+      color: "emerald",
+      icon: "fa-mobile-screen-button",
     },
     {
       label: "Book Reading",
@@ -159,7 +166,7 @@ export default function Sidebar({
       icon: "fa-om",
     },
     {
-      label: "Sleep Goal (5.5h)",
+      label: "Sleep Goal (6.0h)",
       streak: streaks.sleep || 0,
       color: "mint",
       icon: "fa-bed",
@@ -170,6 +177,7 @@ export default function Sidebar({
     terra: "text-terra",
     indigo: "text-indigo-600",
     purple: "text-purple-700",
+    emerald: "text-emerald-600",
     teal: "text-teal",
     gold: "text-gold",
     amber: "text-amber-600",
@@ -180,6 +188,7 @@ export default function Sidebar({
     terra: "bg-terra-pale",
     indigo: "bg-indigo-50",
     purple: "bg-purple-50",
+    emerald: "bg-emerald-50",
     teal: "bg-teal-pale",
     gold: "bg-gold-pale",
     amber: "bg-amber-50",
@@ -190,6 +199,7 @@ export default function Sidebar({
     terra: "bg-terra",
     indigo: "bg-indigo-600",
     purple: "bg-purple-600",
+    emerald: "bg-emerald-600",
     teal: "bg-teal",
     amber: "bg-amber-600",
     mint: "bg-mint",
@@ -197,10 +207,11 @@ export default function Sidebar({
 
   const weekBars = [
     { label: "MERN Interview Prep", count: ws.mern, color: "indigo" },
-    { label: "Gov Exam Study", count: ws.gov, color: "terra" },
+    { label: "GenAI & Agents", count: ws.genai, color: "purple" },
+    { label: "Digital Detox (< 30m)", count: ws.detox, color: "emerald" },
     { label: "Book Reading", count: ws.reading, color: "purple" },
     { label: "Pooja & Exercise", count: Math.max(ws.pooja, ws.exercise), color: "amber" },
-    { label: "Sleep Target (5.5h)", count: ws.sleep, color: "mint" },
+    { label: "Sleep Target (6.0h)", count: ws.sleep, color: "mint" },
   ];
 
   return (
@@ -267,6 +278,12 @@ export default function Sidebar({
             <div className="text-[10px] text-bark-muted mt-0.5 leading-tight">
               {todayTopic.dsaDesc}
             </div>
+            {todayTopic.coreProblem && (
+              <div className="mt-1.5 pt-1 border-t border-indigo-100 text-[10px] text-indigo-900 font-bold flex items-center gap-1 flex-wrap">
+                <span className="text-amber-700">⭐ Solve 1 Problem:</span>
+                <span className="text-slate-800">{todayTopic.coreProblem}</span>
+              </div>
+            )}
           </div>
 
           <div className="bg-white/80 border border-teal-100 rounded-xl p-2.5">
@@ -524,7 +541,7 @@ export default function Sidebar({
               <span>7-Day Output & Balance</span>
             </h3>
             <p className="text-[10px] text-bark-muted mt-0.5">
-              Govt vs MERN vs Life & Wellness output
+              GenAI vs MERN vs Life & Screen Detox output
             </p>
           </div>
           <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
@@ -535,20 +552,20 @@ export default function Sidebar({
         {/* Legend */}
         <div className="flex items-center gap-2.5 text-[10px] font-bold text-bark-muted flex-wrap">
           <span className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded-xs bg-terra"></span> Govt Exam
+            <span className="w-2.5 h-2.5 rounded-xs bg-purple-600"></span> GenAI & Agents
           </span>
           <span className="flex items-center gap-1">
             <span className="w-2.5 h-2.5 rounded-xs bg-indigo-600"></span> MERN / DSA
           </span>
           <span className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded-xs bg-teal-600"></span> Life & Care
+            <span className="w-2.5 h-2.5 rounded-xs bg-emerald-600"></span> Life & Detox
           </span>
         </div>
 
         {/* Stacked Bars */}
         <div className="flex items-end justify-between gap-1.5 pt-3 h-32 border-b border-cream-deep pb-1">
           {last7DaysData.map((d, idx) => {
-            const govPct = Math.min(100, (d.govM / maxDailyMins) * 100);
+            const genaiPct = Math.min(100, (d.genaiM / maxDailyMins) * 100);
             const mernPct = Math.min(100, (d.mernM / maxDailyMins) * 100);
             const lifePct = Math.min(100, (d.lifeM / maxDailyMins) * 100);
 
@@ -558,9 +575,9 @@ export default function Sidebar({
                   {d.totalM > 0 ? `${d.totalM}m` : "0m"}
                 </div>
                 <div className="w-full max-w-[24px] bg-cream-dark/60 rounded-t-md overflow-hidden flex flex-col-reverse justify-start h-20 transition-all group-hover:scale-105">
-                  <div style={{ height: `${govPct}%` }} className="bg-terra w-full" title={`Govt: ${d.govM}m`}></div>
+                  <div style={{ height: `${genaiPct}%` }} className="bg-purple-600 w-full" title={`GenAI: ${d.genaiM}m`}></div>
                   <div style={{ height: `${mernPct}%` }} className="bg-indigo-600 w-full" title={`MERN: ${d.mernM}m`}></div>
-                  <div style={{ height: `${lifePct}%` }} className="bg-teal-600 w-full" title={`Life: ${d.lifeM}m`}></div>
+                  <div style={{ height: `${lifePct}%` }} className="bg-emerald-600 w-full" title={`Life & Detox: ${d.lifeM}m`}></div>
                 </div>
                 <span className={`text-[10px] font-bold mt-1.5 ${d.isToday ? "text-indigo-700 font-black" : "text-bark-muted"}`}>
                   {d.dayLabel}

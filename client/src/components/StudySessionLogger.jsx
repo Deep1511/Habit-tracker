@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import {
   getMernTracker,
   updateMernTracker,
+  getGenaiTracker,
+  updateGenaiTracker,
   getExamTracker,
   updateExamTracker,
   getLocalCache,
@@ -24,6 +26,18 @@ const DURATION_PRESETS = [
 ];
 
 export const LIFE_WELLNESS_CATEGORIES = [
+  {
+    id: "digital_detox",
+    name: "📵 Digital Detox & Screen Guard (< 30m)",
+    habitKey: "screenTimeDetox",
+    icon: "fa-mobile-screen-button",
+    topics: [
+      { id: "dd_1", name: "Zero Instagram Reels & Social Media Fast" },
+      { id: "dd_2", name: "Phone in Drawer / Grayscale Deep Work Focus" },
+      { id: "dd_3", name: "Night Digital Sunset (Phone Locked Away 10 PM)" },
+      { id: "dd_4", name: "Urge Surfing & Dopamine Reset Walk" },
+    ],
+  },
   {
     id: "clean_room",
     name: "🧹 Clean & Organize Bedroom",
@@ -108,16 +122,16 @@ export default function StudySessionLogger({
   onOpenVault,
   onOpenBedtimeSummary,
 }) {
-  // ── Track: 'mern' | 'gov' | 'life' ──
-  const [track, setTrack] = useState("mern"); // 'mern' | 'gov' | 'life'
+  // ── Track: 'mern' | 'genai' | 'life' ──
+  const [track, setTrack] = useState("mern"); // 'mern' | 'genai' | 'life'
   const [mernTracker, setMernTracker] = useState(() =>
     getLocalCache("mern_tracker", null)
   );
-  const [examTracker, setExamTracker] = useState(() =>
-    getLocalCache("exam_tracker", null)
+  const [genaiTracker, setGenaiTracker] = useState(() =>
+    getLocalCache("genai_tracker", null) || getLocalCache("exam_tracker", null)
   );
   const [loadingTrackers, setLoadingTrackers] = useState(
-    () => !getLocalCache("mern_tracker", null) && !getLocalCache("exam_tracker", null)
+    () => !getLocalCache("mern_tracker", null) && !getLocalCache("genai_tracker", null)
   );
 
   // ── Selection State ──
@@ -149,15 +163,15 @@ export default function StudySessionLogger({
   const [customSessionTime, setCustomSessionTime] = useState("");
 
   const TIME_PRESETS = [
-    "7:30 AM",
-    "9:30 AM",
+    "5:00 AM",
+    "7:15 AM",
+    "9:00 AM",
     "11:30 AM",
-    "12:30 PM",
     "2:15 PM",
-    "3:45 PM",
     "4:45 PM",
+    "6:30 PM",
     "8:15 PM",
-    "9:45 PM",
+    "9:30 PM",
   ];
 
   // ── Helper to calculate post-session advice (Always evaluates against current real-time clock & day of week) ──
@@ -178,35 +192,49 @@ export default function StudySessionLogger({
 
     if (isWeekend) {
       // ══════════════════════════════════════════════════════════════
-      // WEEKEND SCHEDULE (Saturday & Sunday - Holiday / No Commute!)
+      // WEEKEND SCHEDULE (Saturday & Sunday - Deep Technical Mastery)
       // ══════════════════════════════════════════════════════════════
-      if (h >= 6 && h < 9.5) {
+      if (h >= 4.5 && h < 6.5) {
         return {
           isPastSession,
           currentClock,
           isWeekend: true,
           breakMins: 10,
-          breakTitle: `🌅 Weekend Morning Flow (${currentClock})`,
-          breakDesc: "Great weekend morning start! Stretch, hydrate, and prepare for Striver DSA at 9:30 AM.",
+          breakTitle: `🌅 Weekend Dawn Striver DSA (${currentClock})`,
+          breakDesc: "Great early morning start! Stretch, hydrate, and prepare for high-focus algorithm patterns.",
           nextTrack: "mern",
-          nextTitle: "💻 MERN Prep — Striver DSA Problem Solving (9:30 AM – 11:00 AM)",
-          nextDetail: "Solve Blind 75 / Top 150 DSA problems with high focus on time complexity.",
-          altTrack: "gov",
-          altTitle: "🏛️ Gov Exam Subject Sprint",
+          nextTitle: "💻 MERN & Striver DSA Problem Solving (4:45 AM – 6:30 AM)",
+          nextDetail: "Solve Blind 75 / Striver A-Z DSA problems with focus on clean time and space complexity.",
+          altTrack: "genai",
+          altTitle: "🤖 GenAI Vector DBs & Embeddings",
         };
-      } else if (h >= 9.5 && h < 13.5) {
+      } else if (h >= 6.5 && h < 8.5) {
+        return {
+          isPastSession,
+          currentClock,
+          isWeekend: true,
+          breakMins: 15,
+          breakTitle: `🏃 Morning Cardio & Fresh Air (${currentClock})`,
+          breakDesc: "Step outside! 30-min run/walk for dopamine reset, then MERN Architecture Sprint.",
+          nextTrack: "mern",
+          nextTitle: "💻 Full-Stack MERN Architecture Sprint (7:00 AM – 8:30 AM)",
+          nextDetail: "Build production Express middleware, React 19 performance patterns, or MongoDB indexes.",
+          altTrack: "life",
+          altTitle: "🧘 Outdoor Mobility & Sunlight",
+        };
+      } else if (h >= 8.5 && h < 13.5) {
         return {
           isPastSession,
           currentClock,
           isWeekend: true,
           breakMins: 10,
-          breakTitle: `☀️ Weekend Midday Sprint (${currentClock})`,
-          breakDesc: "Keep your weekend momentum going before lunch and afternoon rest.",
-          nextTrack: lastLog?.track === "mern" ? "gov" : "mern",
-          nextTitle: "🏛️ Gov Exam Subject Sprint — Polity, History & GS (11:00 AM – 1:30 PM)",
-          nextDetail: "Deep dive into GS and Polity story concepts before lunch at 1:30 PM.",
+          breakTitle: `☀️ Weekend Deep Build Sprint (${currentClock})`,
+          breakDesc: "Deep coding momentum! Zero social media reels, 100% technical execution.",
+          nextTrack: lastLog?.track === "mern" ? "genai" : "mern",
+          nextTitle: "🤖 Generative AI: RAG Pipeline & Vector Search Deep Dive",
+          nextDetail: "Implement hybrid retrieval, reranking, and Pinecone/Qdrant vector stores.",
           altTrack: "mern",
-          altTitle: "💻 MERN Striver DSA",
+          altTitle: "💻 MERN Production API Design",
         };
       } else if (h >= 13.5 && h < 16.5) {
         return {
@@ -215,164 +243,125 @@ export default function StudySessionLogger({
           isWeekend: true,
           breakMins: 15,
           breakTitle: `☕ Weekend Afternoon Recharge (${currentClock})`,
-          breakDesc: "Take a restful break, relax, and recharge your mind for evening sectional drills.",
-          nextTrack: "gov",
-          nextTitle: "🏛️ Gov Exam Sectional Drill — Quantitative Aptitude & Reasoning (4:30 PM – 6:30 PM)",
-          nextDetail: "Solve 40-50 practice questions across speed math, arithmetic, and puzzles.",
+          breakDesc: "Post-lunch restful break. Relax your eyes, hydrate, and avoid mindless phone scrolling.",
+          nextTrack: "genai",
+          nextTitle: "🤖 Autonomous AI Agents & Tool Calling (ReAct Pattern)",
+          nextDetail: "Build LangChain / CrewAI / custom multi-agent collaboration loops.",
           altTrack: "mern",
-          altTitle: "💻 MERN Machine Coding",
+          altTitle: "💻 MERN Full-Stack Sandbox",
         };
       } else if (h >= 16.5 && h < 18.5) {
-        // 4:30 PM - 6:30 PM (e.g. 5:45 PM like right now on Sunday!)
         return {
           isPastSession,
           currentClock,
           isWeekend: true,
           breakMins: 10,
           breakTitle: `☕ Weekend Focus Flow (${currentClock})`,
-          breakDesc: "It's the weekend (no office commute!). Continue your focused study until your 6:30 PM evening walk.",
-          nextTrack: "gov",
-          nextTitle: "🏛️ Gov Exam Sectional Practice (4:30 PM – 6:30 PM) ➡️ 🚶 Evening Walk (6:30 PM) ➡️ 🍲 Dinner (7:30 PM)",
-          nextDetail: "Wrap up your math/reasoning drill, enjoy fresh air at 6:30 PM, then dinner at 7:30 PM and Gov Final Analysis at 8:30 PM!",
-          altTrack: "mern",
-          altTitle: "💻 MERN Full-Stack Sandbox",
+          breakDesc: "Wrap up afternoon coding, then 6:30 PM evening walk & family time.",
+          nextTrack: "genai",
+          nextTitle: "🤖 GenAI Agent Evaluation & Testing ➡️ 🚶 Evening Walk (6:30 PM)",
+          nextDetail: "Benchmark prompt outputs, then enjoy fresh evening air and dinner.",
+          altTrack: "life",
+          altTitle: "🏃 30-Min Evening Walk & Fresh Air",
         };
       } else if (h >= 18.5 && h < 20) {
-        // 6:30 PM - 8:00 PM
         return {
           isPastSession,
           currentClock,
           isWeekend: true,
           breakMins: 15,
-          breakTitle: `🚶 Weekend Evening Walk & Family Time (${currentClock})`,
-          breakDesc: "No commute today! Enjoy a refreshing evening walk, relax with family, and have a good dinner.",
+          breakTitle: `🚶 Evening Walk & Family Dinner (${currentClock})`,
+          breakDesc: "Screen detox time! Put your phone away, have dinner, and prepare for night GenAI sprint.",
           nextTrack: "routine",
-          nextTitle: "🍲 Dinner & Family Time (7:30 PM) ➡️ 🏛️ Gov Final Analysis (8:30 PM)",
-          nextDetail: "Nutritious meal and mental reset before your 8:30 PM mock test analysis.",
-          altTrack: "gov",
-          altTitle: "🏛️ Gov Final Analysis (8:30 PM)",
+          nextTitle: "🍲 Dinner & Family Time (7:30 PM) ➡️ 🤖 GenAI Prime Block (8:00 PM)",
+          nextDetail: "Nutritious meal and mental reset before your 8:00 PM GenAI session.",
+          altTrack: "genai",
+          altTitle: "🤖 GenAI Prime Block (8:00 PM)",
         };
       } else {
-        // 8:00 PM to Midnight
         return {
           isPastSession,
           currentClock,
           isWeekend: true,
           breakMins: 10,
-          breakTitle: `🌙 Weekend Night Mastery (${currentClock})`,
-          breakDesc: "Evening sprint before book reading and restful sleep.",
-          nextTrack: lastLog?.track === "gov" ? "mern" : "gov",
-          nextTitle: "🏛️ Gov Final Analysis (8:30 PM – 10:00 PM) ➡️ 💻 MERN Project Build (10:00 PM)",
-          nextDetail: "Review your mock errors, then build your MERN project before 11:00 PM book reading.",
-          altTrack: "reading",
-          altTitle: "📖 Book Reading (11:00 PM)",
+          breakTitle: `🌙 Night Wind-Down & Digital Sunset (${currentClock})`,
+          breakDesc: "Lock phone away in drawer, zero Instagram, read book and sleep at 10:30 PM for 6h recovery.",
+          nextTrack: "reading",
+          nextTitle: "📖 Book Reading (10:00 PM) ➡️ 😴 6.0h Sleep by 10:30 PM",
+          nextDetail: "Read Atomic Habits / Deep Work, let mind decompress, wake energized at 4:30 AM.",
+          altTrack: "genai",
+          altTitle: "🤖 15-Min Quick Architecture Recap",
         };
       }
     }
 
     // ══════════════════════════════════════════════════════════════
-    // WEEKDAY SCHEDULE (Monday - Friday with Commute Windows)
+    // WEEKDAY SCHEDULE (Monday - Friday with MERN + GenAI + Detox)
     // ══════════════════════════════════════════════════════════════
-    if (h >= 6 && h < 8.25) {
+    if (h >= 4.5 && h < 6.5) {
       return {
         isPastSession,
         currentClock,
         breakMins: 10,
-        breakTitle: "Quick 10-Min Hydration & Stretch",
-        breakDesc: "Great morning start! Grab water, stretch, and get ready for your morning commute (8:15 AM).",
-        nextTrack: "routine",
-        nextTitle: "🚌 Morning Travel / Commute (8:15 AM – 9:30 AM)",
-        nextDetail: "Listen to Daily Current Affairs podcast or audio tech lectures during transit.",
-        altTrack: "gov",
-        altTitle: "Review 5 Quick Math Formulas",
-      };
-    } else if (h >= 8.25 && h < 9.5) {
-      return {
-        isPastSession,
-        currentClock,
-        breakMins: 5,
-        breakTitle: "Commute Transition",
-        breakDesc: "You are in your morning travel window. Settle in and prepare for 9:30 AM deep coding.",
+        breakTitle: "🌅 Dawn Striver DSA Focus",
+        breakDesc: "Hydrate with 500ml water. Peak cognitive power window for data structures & algorithms.",
         nextTrack: "mern",
-        nextTitle: "💻 MERN & Striver DSA Deep Sprint (9:30 AM – 11:30 AM)",
-        nextDetail: "Your prefrontal cortex is at peak firing. Tackle 1-2 Striver DSA algorithms or JavaScript internals.",
-        altTrack: "mern",
-        altTitle: "React Architecture Sprint",
+        nextTitle: "💻 Striver DSA Sheet Problem Solving (4:45 AM – 6:30 AM)",
+        nextDetail: "Master Blind 75 / Top Interview 150 patterns with optimal time complexity.",
+        altTrack: "routine",
+        altTitle: "🏃 Cardio & Fitness at 6:30 AM",
       };
-    } else if (h >= 9.5 && h < 13.5) {
+    } else if (h >= 6.5 && h < 8.5) {
       return {
         isPastSession,
         currentClock,
         breakMins: 10,
-        breakTitle: "10-Min Eye & Brain Pause",
-        breakDesc: "Stand up, rest your eyes, drink water, and let your brain reset before your next block.",
-        nextTrack: lastLog?.track === "mern" ? "gov" : "mern",
-        nextTitle: lastLog?.track === "mern" ? "💻 MERN Full-Stack / 💼 Light Work" : "💻 MERN & DSA Coding Sprint",
-        nextDetail: "Continue your focused sprint before lunch at 1:30 PM.",
-        altTrack: "work",
-        altTitle: "Flexible Company Tasks (11:30 AM – 12:30 PM)",
+        breakTitle: "🏃 Post-Cardio MERN Sprint",
+        breakDesc: "Great fitness session! Endorphins are high—tackle your MERN project architecture.",
+        nextTrack: "mern",
+        nextTitle: "💻 Full-Stack MERN Architecture Deep Dive (7:00 AM – 8:30 AM)",
+        nextDetail: "Code production APIs, auth middleware, state management, or component performance.",
+        altTrack: "mern",
+        altTitle: "Review React Performance & Memoization",
       };
-    } else if (h >= 13.5 && h < 16) {
-      // 1:30 PM - 4:00 PM (e.g. at 3:15 - 3:30 PM)
+    } else if (h >= 8.5 && h < 18.5) {
+      return {
+        isPastSession,
+        currentClock,
+        breakMins: 10,
+        breakTitle: "🏢 Office Deep Work & Screen Discipline",
+        breakDesc: "Keep your phone inside bag/drawer. Zero Instagram reels. Focus on office tasks & tech concepts.",
+        nextTrack: "mern",
+        nextTitle: "💼 Office Deep Work & Tech Architecture (Phone Locked in Bag)",
+        nextDetail: "Maintain professional output, listen to offline podcasts during lunch/transit.",
+        altTrack: "life",
+        altTitle: "📵 Digital Detox: Zero Social Media",
+      };
+    } else if (h >= 18.5 && h < 20) {
       return {
         isPastSession,
         currentClock,
         breakMins: 15,
-        breakTitle: "☕ 15-Min Tea & Brain Reset (Until 3:45 PM)",
-        breakDesc: "Awesome job on completing your afternoon session! Step away from the screen, stretch, and enjoy a warm cup of tea.",
-        nextTrack: "gov",
-        nextTitle: "🏛️ Govt Exam Sectional Practice: Quantitative Aptitude & Reasoning Drills (3:45 PM – 4:45 PM)",
-        nextDetail: "Practice 20-30 timed speed calculation and puzzle questions while your afternoon alertness rebounds.",
-        altTrack: "mern",
-        altTitle: "💻 MERN Machine Coding & Full-Stack Sandbox (4:45 PM – 6:00 PM)",
-      };
-    } else if (h >= 16 && h < 18) {
-      // 4:00 PM - 6:00 PM (e.g. 5:39 PM on Weekday)
-      return {
-        isPastSession,
-        currentClock,
-        breakMins: 10,
-        breakTitle: `⏰ Pre-Travel Focus (Current Time: ${currentClock})`,
-        breakDesc:
-          "You are nearing the 6:00 PM Evening Commute window. Wrap up open code tabs, read 1 quick analogy in the Vault, or prep for transit.",
-        nextTrack: "mern",
-        nextTitle: "🚌 Evening Commute Home (6:00 PM – 7:00 PM) ➡️ 🍲 Dinner (7:30 PM) ➡️ 🏛️ Prime Mock Test (8:15 PM)",
-        nextDetail:
-          "Use 6:00 PM travel for audio podcasts & decompression, then get ready for your 8:15 PM Full Mock Test!",
-        altTrack: "gov",
-        altTitle: "🏛️ Prep for 8:15 PM Full Mock Test",
-      };
-    } else if (h >= 18 && h < 19) {
-      // 6:00 PM - 7:00 PM
-      return {
-        isPastSession,
-        currentClock,
-        breakMins: 15,
-        breakTitle: "🚌 Evening Commute Home (6:00 PM – 7:00 PM)",
-        breakDesc: "Decompress from the day. Enjoy relaxing music or tech podcasts on your way home.",
-        nextTrack: "routine",
-        nextTitle: "🍲 Dinner & Family Time (7:30 PM – 8:15 PM)",
-        nextDetail: "Nutritious meal to fuel your evening prime mock test at 8:15 PM.",
-        altTrack: "gov",
-        altTitle: "🏛️ Prep for 8:15 PM Full Mock Test",
+        breakTitle: "🚶 Evening Walk & Dinner Decompression",
+        breakDesc: "30-min walk in fresh air, family time, and healthy dinner before prime GenAI block.",
+        nextTrack: "genai",
+        nextTitle: "🍲 Dinner & Reset (7:30 PM) ➡️ 🤖 GenAI & AI Agents Deep Sprint (8:00 PM)",
+        nextDetail: "Fuel up for autonomous agents, tool calling, and RAG architectures at 8:00 PM.",
+        altTrack: "genai",
+        altTitle: "🤖 Prep 8:00 PM GenAI Sprint",
       };
     } else {
-      // Night (7:00 PM to midnight)
       return {
         isPastSession,
         currentClock,
         breakMins: 10,
-        breakTitle: `🌙 Evening Focus (Current Time: ${currentClock})`,
-        breakDesc: "Hydrate and stretch before your prime evening sprint.",
-        nextTrack: lastLog?.track === "gov" ? "mern" : "gov",
-        nextTitle:
-          lastLog?.track === "gov"
-            ? "💻 MERN 1-Pattern Tech Review / Live Class"
-            : "🏛️ Govt Full Mock Test & Sectional Analysis (8:15 PM)",
-        nextDetail:
-          "Deep focused practice before night revision (10:45 PM) and book reading (11:30 PM).",
-        altTrack: "reading",
-        altTitle: "📖 Book Reading (11:30 PM)",
+        breakTitle: `🌙 Night Mastery & Digital Sunset (${currentClock})`,
+        breakDesc: "Lock phone away by 9:30 PM. Read 15 mins of book, lights out by 10:30 PM for 6h restorative sleep.",
+        nextTrack: "reading",
+        nextTitle: "📖 Book Reading (10:00 PM) ➡️ 😴 Sleep by 10:30 PM (Wake 4:30 AM)",
+        nextDetail: "No blue light after 9:30 PM. Let your brain consolidate today's MERN & GenAI code.",
+        altTrack: "genai",
+        altTitle: "🤖 GenAI Agentic Design (Wrap by 9:30 PM)",
       };
     }
   };
@@ -380,12 +369,12 @@ export default function StudySessionLogger({
   // ── Load Tracker Data ──
   const loadTrackers = async () => {
     try {
-      const [mernData, examData] = await Promise.all([
+      const [mernData, genaiData] = await Promise.all([
         getMernTracker().catch(() => null),
-        getExamTracker().catch(() => null),
+        getGenaiTracker().catch(() => null),
       ]);
       if (mernData) setMernTracker(mernData);
-      if (examData) setExamTracker(examData);
+      if (genaiData) setGenaiTracker(genaiData);
     } catch (e) {
       console.warn("StudySessionLogger sync info:", e);
     } finally {
@@ -401,12 +390,12 @@ export default function StudySessionLogger({
   const activeSubjects = useMemo(() => {
     if (track === "mern") {
       return mernTracker?.subjects || [];
-    } else if (track === "gov") {
-      return examTracker?.subjects || [];
+    } else if (track === "genai" || track === "gov") {
+      return genaiTracker?.subjects || [];
     } else {
       return LIFE_WELLNESS_CATEGORIES;
     }
-  }, [track, mernTracker, examTracker]);
+  }, [track, mernTracker, genaiTracker]);
 
   // Set default subject if none selected or track switched
   useEffect(() => {
@@ -471,9 +460,9 @@ export default function StudySessionLogger({
       .reduce((acc, l) => acc + (Number(l.minutes) || 0), 0);
   }, [todayLogs]);
 
-  const todayGovMins = useMemo(() => {
+  const todayGenaiMins = useMemo(() => {
     return todayLogs
-      .filter((l) => l.track === "gov")
+      .filter((l) => l.track === "genai" || l.track === "gov")
       .reduce((acc, l) => acc + (Number(l.minutes) || 0), 0);
   }, [todayLogs]);
 
@@ -590,7 +579,7 @@ export default function StudySessionLogger({
 
     setIsSubmitting(true);
     try {
-      // 1. Auto-Tick in Master Syllabus (MERN or Govt Exam)
+      // 1. Auto-Tick in Master Syllabus (MERN or GenAI Track)
       if (autoTickCovered && finalTopicId) {
         if (track === "mern" && mernTracker) {
           const updatedSubs = mernTracker.subjects.map((sub) => {
@@ -610,8 +599,8 @@ export default function StudySessionLogger({
           const res = await updateMernTracker(updatedSubs);
           setMernTracker(res);
           onTrackersUpdated?.("mern", res);
-        } else if (track === "gov" && examTracker) {
-          const updatedSubs = examTracker.subjects.map((sub) => {
+        } else if ((track === "genai" || track === "gov") && genaiTracker) {
+          const updatedSubs = genaiTracker.subjects.map((sub) => {
             if (sub.id !== finalSubjectId) return sub;
             return {
               ...sub,
@@ -625,9 +614,9 @@ export default function StudySessionLogger({
               }),
             };
           });
-          const res = await updateExamTracker(updatedSubs);
-          setExamTracker(res);
-          onTrackersUpdated?.("gov", res);
+          const res = await updateGenaiTracker(updatedSubs);
+          setGenaiTracker(res);
+          onTrackersUpdated?.("genai", res);
         }
       }
 
@@ -662,10 +651,20 @@ export default function StudySessionLogger({
       if (track === "mern") {
         updatedHabits.mern = true;
         updatedHabits.mernMorning = true;
-      } else if (track === "gov") {
-        updatedHabits.gov = true;
-        updatedHabits.govMorning = true;
+      } else if (track === "genai" || track === "gov") {
+        updatedHabits.genai = true;
+        updatedHabits.genaiSession = true;
       } else if (track === "life") {
+        if (
+          finalSubjectId === "digital_detox" ||
+          finalTopicName.toLowerCase().includes("instagram") ||
+          finalTopicName.toLowerCase().includes("detox") ||
+          finalTopicName.toLowerCase().includes("screen")
+        ) {
+          updatedHabits.screenTimeDetox = true;
+          updatedHabits.noInstagram = true;
+          updatedHabits.digitalDetox = true;
+        }
         if (finalSubjectId === "book_reading" || finalTopicName.toLowerCase().includes("reading") || finalTopicName.toLowerCase().includes("book")) {
           updatedHabits.reading = true;
         }
@@ -864,11 +863,11 @@ export default function StudySessionLogger({
               </p>
             </div>
             <div className="bg-white/80 rounded-xl p-3 border border-purple-100 shadow-2xs">
-              <div className="font-bold text-terra-dark flex items-center gap-1.5 mb-1">
+              <div className="font-bold text-purple-700 flex items-center gap-1.5 mb-1">
                 <i className="fa-solid fa-arrows-split-up-and-left"></i> 2. Energy-Based Switching
               </div>
               <p className="text-bark-muted leading-relaxed">
-                High mental energy? Do <strong>MERN / Striver DSA coding</strong>. Tired or low motivation? Switch the track dropdown to <strong>Govt Exam GK, English, or Aptitude quizzes</strong>. No guilt!
+                High mental energy? Do <strong>MERN & Striver DSA algorithms</strong>. Moderate energy? Switch to <strong>Generative AI & Agentic loops</strong>. Low energy? Do <strong>15-Min Digital Detox & Habit Reset</strong>!
               </p>
             </div>
             <div className="bg-white/80 rounded-xl p-3 border border-purple-100 shadow-2xs">
@@ -967,16 +966,16 @@ export default function StudySessionLogger({
                 <button
                   type="button"
                   onClick={() => {
-                    setTrack("gov");
+                    setTrack("genai");
                     setDurationMins(60);
                     setSelectedTopicId("");
                     setCustomTopicName("");
-                    showToast?.("Set track to Government Exam! Pick your next drill topic.", "info");
+                    showToast?.("Set track to Generative AI! Pick your next AI Agent / RAG topic.", "info");
                   }}
-                  className="px-2.5 py-1 bg-terra-pale hover:bg-terra/10 text-terra border border-terra/30 font-bold text-[10px] rounded-lg transition-all flex items-center gap-1 cursor-pointer"
+                  className="px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 font-bold text-[10px] rounded-lg transition-all flex items-center gap-1 cursor-pointer"
                 >
-                  <i className="fa-solid fa-landmark"></i>
-                  <span>Prep Next Gov Topic</span>
+                  <i className="fa-solid fa-brain"></i>
+                  <span>Prep GenAI Topic</span>
                 </button>
 
                 <button
@@ -1033,18 +1032,18 @@ export default function StudySessionLogger({
             <button
               type="button"
               onClick={() => {
-                setTrack("gov");
+                setTrack("genai");
                 setSelectedTopicId("");
                 setTopicSearch("");
               }}
               className={`px-3 py-2 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                track === "gov"
-                  ? "bg-terra-dark text-white shadow-xs"
+                track === "genai" || track === "gov"
+                  ? "bg-purple-600 text-white shadow-xs"
                   : "text-bark-muted hover:text-bark hover:bg-white/60"
               }`}
             >
-              <i className="fa-solid fa-landmark"></i>
-              Government Exam Track
+              <i className="fa-solid fa-brain"></i>
+              GenAI & Agents Track
             </button>
             <button
               type="button"
@@ -1055,12 +1054,12 @@ export default function StudySessionLogger({
               }}
               className={`px-3 py-2 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                 track === "life"
-                  ? "bg-teal-700 text-white shadow-xs"
+                  ? "bg-emerald-600 text-white shadow-xs"
                   : "text-bark-muted hover:text-bark hover:bg-white/60"
               }`}
             >
-              <i className="fa-solid fa-spa"></i>
-              Life, Cleaning & Self-Care
+              <i className="fa-solid fa-mobile-screen-button"></i>
+              Life & Digital Detox
             </button>
           </div>
 
@@ -1589,12 +1588,12 @@ export default function StudySessionLogger({
                 MERN: {todayMernMins}m
               </span>
               <span>•</span>
-              <span className="text-terra-dark font-extrabold">
-                Govt: {todayGovMins}m
+              <span className="text-purple-700 font-extrabold">
+                GenAI: {todayGenaiMins}m
               </span>
               <span>•</span>
-              <span className="text-teal-700 font-extrabold">
-                Life: {todayLifeMins}m
+              <span className="text-emerald-700 font-extrabold">
+                Life & Detox: {todayLifeMins}m
               </span>
             </div>
           )}
@@ -1609,6 +1608,7 @@ export default function StudySessionLogger({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
             {todayLogs.map((log) => {
               const isMern = log.track === "mern";
+              const isGenai = log.track === "genai" || log.track === "gov";
               const isLife = log.track === "life";
               return (
                 <div
@@ -1616,9 +1616,9 @@ export default function StudySessionLogger({
                   className={`p-3 rounded-xl border flex flex-col justify-between transition-all bg-white ${
                     isMern
                       ? "border-indigo-200/80 hover:border-indigo-400"
-                      : isLife
-                      ? "border-teal-200/80 hover:border-teal-400"
-                      : "border-terra/20 hover:border-terra/40"
+                      : isGenai
+                      ? "border-purple-200/80 hover:border-purple-400"
+                      : "border-teal-200/80 hover:border-teal-400"
                   } shadow-2xs`}
                 >
                   <div>
@@ -1628,12 +1628,12 @@ export default function StudySessionLogger({
                           className={`text-[9px] font-extrabold px-2 py-0.5 rounded-md uppercase tracking-wider ${
                             isMern
                               ? "bg-indigo-100 text-indigo-800"
-                              : isLife
-                              ? "bg-teal-100 text-teal-800 border border-teal-200"
-                              : "bg-terra-pale text-terra-dark border border-terra/20"
+                              : isGenai
+                              ? "bg-purple-100 text-purple-800 border border-purple-200"
+                              : "bg-teal-100 text-teal-800 border border-teal-200"
                           }`}
                         >
-                          {isMern ? "MERN & DSA" : isLife ? "Life & Wellness" : "Govt Exam"}
+                          {isMern ? "MERN & DSA" : isGenai ? "GenAI & Agents" : "Life & Detox"}
                         </span>
                         {log.confidence === "tough" && (
                           <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-red-100 text-red-700 border border-red-200">

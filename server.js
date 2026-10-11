@@ -53,6 +53,106 @@ const ExamTrackerSchema = new mongoose.Schema({
 });
 const ExamTracker = mongoose.model("ExamTracker", ExamTrackerSchema);
 
+const GenaiTrackerSchema = new mongoose.Schema({
+  key: { type: String, default: "main" },
+  subjects: [
+    {
+      id: String,
+      name: String,
+      order: Number,
+      resourceType: { type: String, default: "genai" },
+      resourceLink: { type: String, default: "" },
+      topics: [
+        {
+          id: String,
+          name: String,
+          order: Number,
+          covered: { type: Boolean, default: false },
+          testDone: { type: Boolean, default: false },
+          important: { type: Boolean, default: false },
+          resourceLink: { type: String, default: "" },
+          level: { type: String, default: "" },
+        },
+      ],
+    },
+  ],
+});
+const GenaiTracker = mongoose.model("GenaiTracker", GenaiTrackerSchema);
+
+const DEFAULT_GENAI_SUBJECTS = [
+  {
+    id: "genai_foundations",
+    name: "1. Foundations of LLMs & Prompt Engineering",
+    order: 0,
+    resourceType: "genai",
+    resourceLink: "https://platform.openai.com/docs/guides/prompt-engineering",
+    topics: [
+      { id: "gen_1", name: "LLM Architecture: Attention Mechanism, Transformers & Next-Token Prediction", order: 0, covered: false, testDone: false, important: true, level: "Foundations" },
+      { id: "gen_2", name: "Tokenization, Context Windows (8k to 2M tokens) & Rate Limits / Cost Optimization", order: 1, covered: false, testDone: false, important: true, level: "Foundations" },
+      { id: "gen_3", name: "Core Prompt Engineering: Zero-Shot, Few-Shot, System Instructions & Guardrails", order: 2, covered: false, testDone: false, important: true, level: "Prompting" },
+      { id: "gen_4", name: "Advanced Reasoning: Chain-of-Thought (CoT), Tree of Thoughts & Self-Consistency", order: 3, covered: false, testDone: false, important: true, level: "Prompting" },
+      { id: "gen_5", name: "Structured JSON Outputs: Schema Enforcement with Zod & Pydantic", order: 4, covered: false, testDone: false, important: true, level: "Production" },
+      { id: "gen_6", name: "API Mastery: OpenAI, Anthropic Claude & Google Gemini Node.js SDKs", order: 5, covered: false, testDone: false, important: true, level: "APIs" },
+    ],
+  },
+  {
+    id: "genai_embeddings",
+    name: "2. Vector Embeddings & Vector Databases",
+    order: 1,
+    resourceType: "genai",
+    resourceLink: "",
+    topics: [
+      { id: "emb_1", name: "Embedding Space: High-Dimensional Vectors, Cosine Similarity & Dot Product", order: 0, covered: false, testDone: false, important: true, level: "Embeddings" },
+      { id: "emb_2", name: "Embedding Models: text-embedding-3-small/large, Voyage AI & Nomic Open Models", order: 1, covered: false, testDone: false, important: false, level: "Embeddings" },
+      { id: "emb_3", name: "Vector Indexing Algorithms: HNSW (Hierarchical Navigable Small World) & IVF-PQ", order: 2, covered: false, testDone: false, important: true, level: "Vector DBs" },
+      { id: "emb_4", name: "MongoDB Atlas Vector Search: Creating Vector Indexes & Aggregation Pipelines ($vectorSearch)", order: 3, covered: false, testDone: false, important: true, level: "MERN + GenAI" },
+      { id: "emb_5", name: "Dedicated Vector DBs: Pinecone, ChromaDB, Qdrant & Weaviate Hands-On", order: 4, covered: false, testDone: false, important: true, level: "Vector DBs" },
+    ],
+  },
+  {
+    id: "genai_rag",
+    name: "3. Advanced Retrieval-Augmented Generation (RAG)",
+    order: 2,
+    resourceType: "genai",
+    resourceLink: "",
+    topics: [
+      { id: "rag_1", name: "Naive RAG vs Advanced Production RAG Pipelines Architecture", order: 0, covered: false, testDone: false, important: true, level: "RAG" },
+      { id: "rag_2", name: "Chunking Strategies: Recursive Character Chunking, Semantic Chunking & Parent-Child", order: 1, covered: false, testDone: false, important: true, level: "RAG" },
+      { id: "rag_3", name: "Hybrid Search: Combining Dense Vector Semantic Search + Sparse BM25 Keyword Search", order: 2, covered: false, testDone: false, important: true, level: "Search" },
+      { id: "rag_4", name: "Reranking Pipelines: Cohere Rerank & Cross-Encoder Models for High Precision", order: 3, covered: false, testDone: false, important: true, level: "RAG" },
+      { id: "rag_5", name: "Multi-Document & Conversational RAG with Chat History & Context Condensation", order: 4, covered: false, testDone: false, important: true, level: "Production" },
+    ],
+  },
+  {
+    id: "genai_agents",
+    name: "4. Autonomous AI Agents & Tool Calling (Agentic AI)",
+    order: 3,
+    resourceType: "genai",
+    resourceLink: "",
+    topics: [
+      { id: "agent_1", name: "Agent Architecture: ReAct (Reason + Act) Loop & Autonomous Reflection", order: 0, covered: false, testDone: false, important: true, level: "Agents" },
+      { id: "agent_2", name: "Tool Calling & Function Calling: Binding Custom JS/Node.js Functions to LLMs", order: 1, covered: false, testDone: false, important: true, level: "Tools" },
+      { id: "agent_3", name: "LangChain & LangGraph: State Machines, Human-in-the-Loop & Multi-Agent Teams", order: 2, covered: false, testDone: false, important: true, level: "Frameworks" },
+      { id: "agent_4", name: "Model Context Protocol (MCP): Building & Connecting MCP Servers and Clients", order: 3, covered: false, testDone: false, important: true, level: "Protocols" },
+      { id: "agent_5", name: "Memory Systems: Short-Term Scratchpad, Buffer Memory & Long-Term Vector Memory", order: 4, covered: false, testDone: false, important: true, level: "Memory" },
+    ],
+  },
+  {
+    id: "genai_production",
+    name: "5. Production Full-Stack GenAI Apps (MERN + GenAI)",
+    order: 4,
+    resourceType: "genai",
+    resourceLink: "",
+    topics: [
+      { id: "prod_1", name: "Streaming Architecture: Server-Sent Events (SSE) & React Real-Time Token Streaming", order: 0, covered: false, testDone: false, important: true, level: "Full-Stack" },
+      { id: "prod_2", name: "Semantic Caching with Redis & Token Cost Minimization", order: 1, covered: false, testDone: false, important: true, level: "Scale" },
+      { id: "prod_3", name: "Local LLMs: Running Llama 3 / Mistral / DeepSeek via Ollama & vLLM", order: 2, covered: false, testDone: false, important: true, level: "Local Models" },
+      { id: "prod_4", name: "LLM Observability & Evaluation: Tracing with LangSmith, Ragas & Hallucination Checks", order: 3, covered: false, testDone: false, important: true, level: "Eval" },
+      { id: "prod_5", name: "Capstone Project: Production-Ready Full-Stack RAG Agent SaaS Platform", order: 4, covered: false, testDone: false, important: true, level: "Capstone" },
+    ],
+  },
+];
+
 const MernTrackerSchema = new mongoose.Schema({
   key: { type: String, default: "main" },
   subjects: [
@@ -392,8 +492,18 @@ app.get("/api/stats/streaks", async (req, res) => {
         h.mernProject === true ||
         h.mernClass === true ||
         h.mernMock === true ||
-        h.genai === true ||
         h.crafting === true,
+      genai: (h) =>
+        h.genai === true ||
+        h.genaiSession === true ||
+        h.genaiAgent === true ||
+        h.genaiRag === true ||
+        h.genaiNight === true,
+      detox: (h) =>
+        h.screenTimeDetox === true ||
+        h.noInstagram === true ||
+        h.digitalDetox === true ||
+        h.phoneLockout === true,
       reading: (h) => h.reading === true || h.bookReading === true,
       sleep: (h) => h.sleepGoal === true,
     };
@@ -430,10 +540,54 @@ const getMernMinutesAggregation = async (req, res) => {
 app.get("/api/stats/mern-total", getMernMinutesAggregation);
 app.get("/api/stats/craft-total", getMernMinutesAggregation);
 
-// ── Exam Tracker Routes (Government Exams) ────────────────────
+// ── Generative AI & Agentic AI Curriculum Tracker Routes ────────
+
+app.get("/api/genai-tracker", async (req, res) => {
+  try {
+    let tracker = await GenaiTracker.findOne({ key: "main" });
+    if (!tracker) {
+      tracker = await GenaiTracker.create({
+        key: "main",
+        subjects: DEFAULT_GENAI_SUBJECTS,
+      });
+    }
+    res.json(tracker);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put("/api/genai-tracker", async (req, res) => {
+  try {
+    const { subjects } = req.body;
+    const tracker = await GenaiTracker.findOneAndUpdate(
+      { key: "main" },
+      { subjects: subjects || [] },
+      { new: true, upsert: true },
+    );
+    res.json(tracker);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete("/api/genai-tracker", async (req, res) => {
+  try {
+    await GenaiTracker.deleteMany({});
+    res.json({ message: "GenAI tracker reset" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Exam Tracker Routes (Backward Compatibility with GenAI Fallback) ──
 
 app.get("/api/exam-tracker", async (req, res) => {
   try {
+    // If client calls exam-tracker, gracefully return GenaiTracker if preferred or ExamTracker
+    let genai = await GenaiTracker.findOne({ key: "main" });
+    if (genai) return res.json(genai);
+
     let tracker = await ExamTracker.findOne({ key: "main" });
     if (!tracker) {
       tracker = await ExamTracker.create({

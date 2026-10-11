@@ -29,7 +29,9 @@ import {
 import Calendar from "./components/Calendar";
 import DayModal from "./components/DayModal";
 import Sidebar from "./components/Sidebar";
-import ExamTracker from "./components/ExamTracker";
+import GenaiTracker from "./components/GenaiTracker";
+import DigitalDetoxGuard from "./components/DigitalDetoxGuard";
+import TodayLiveHUD from "./components/TodayLiveHUD";
 import MernTracker from "./components/MernTracker";
 import BookRecommendations from "./components/BookRecommendations";
 import TaskDetailModal from "./components/TaskDetailModal";
@@ -43,17 +45,35 @@ import EmergencyRescueModal from "./components/EmergencyRescueModal";
 import RapidDrillModal from "./components/RapidDrillModal";
 import MorningSession from "./components/MorningSession";
 import MasterSchedule24H from "./components/MasterSchedule24H";
+import NaukriProManager from "./components/NaukriProManager";
+import StickyNotesStudioModal from "./components/StickyNotesStudioModal";
 
 export default function App() {
   const cachedSettings = getLocalCache("settings", {});
   const [startDate, setStartDate] = useState(
-    cachedSettings.startDate || "2026-08-24"
+    cachedSettings.startDate && cachedSettings.startDate >= "2026-10-12"
+      ? cachedSettings.startDate
+      : "2026-10-12"
   );
   const [targetDate, setTargetDate] = useState(
     cachedSettings.targetDate || cachedSettings.birthdayDate || "2026-11-24"
   );
+
+  // Tomorrow calculation (Day 1 kickoff)
+  const getTomorrowDate = () => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return d;
+  };
+  const tomorrowStr = fmtDate(getTomorrowDate());
+  const actualTodayStr = fmtDate(new Date());
+
+  // Default active tracking date to tomorrow since user requested to start from tomorrow and not display today
+  const [activeDateStr, setActiveDateStr] = useState(tomorrowStr);
+  const isTomorrowActive = activeDateStr === tomorrowStr;
+
   const [monthData, setMonthData] = useState(() => {
-    const tmKey = fmtDate(new Date()).slice(0, 7);
+    const tmKey = tomorrowStr.slice(0, 7);
     const cached = getLocalCache(`habits_${tmKey}`, []);
     const m = {};
     cached.forEach((x) => (m[x.date] = x));
@@ -76,20 +96,24 @@ export default function App() {
   const [showReset, setShowReset] = useState(false);
   const [showBooks, setShowBooks] = useState(false);
   const [showMentalVault, setShowMentalVault] = useState(false);
+  const [showStickyNotesModal, setShowStickyNotesModal] = useState(false);
   const [showBedtimeSummary, setShowBedtimeSummary] = useState(false);
   const [showTimeline, setShowTimeline] = useState(true);
   const [todayMission, setTodayMission] = useState(() => {
     return (
-      localStorage.getItem("today_mission_" + fmtDate(new Date())) ||
-      localStorage.getItem("tomorrow_goal_" + fmtDate(new Date())) ||
-      ""
+      localStorage.getItem("today_mission_" + tomorrowStr) ||
+      localStorage.getItem("tomorrow_goal_" + tomorrowStr) ||
+      "🏃‍♂️ Day 1: 5:30 AM Outdoor Running + Striver DSA + MERN & GenAI Sprint"
     );
   });
   const [isEditingMission, setIsEditingMission] = useState(false);
   const [missionInput, setMissionInput] = useState("");
   const [showRescueModal, setShowRescueModal] = useState(false);
   const [showRapidDrill, setShowRapidDrill] = useState(false);
-  const [activeTrackerTab, setActiveTrackerTab] = useState("mern"); // 'mern' | 'gov'
+  const [activeTrackerTab, setActiveTrackerTab] = useState("mern"); // 'mern' | 'genai'
+  const [mainDashboardTab, setMainDashboardTab] = useState("today"); // 'today' | 'trackers' | 'detox' | 'calendar' | 'mindset'
+  const [showCopilotCompanion, setShowCopilotCompanion] = useState(false);
+  const [showCardioGuide, setShowCardioGuide] = useState(false);
   const [trackerRefreshTrigger, setTrackerRefreshTrigger] = useState(0);
   const [use24HourMasterSchedule, setUse24HourMasterSchedule] = useState(() => {
     return localStorage.getItem("use_24h_master_schedule") === "true";
@@ -102,7 +126,7 @@ export default function App() {
       localStorage.setItem("use_24h_master_schedule", String(next));
       showToast(
         next
-          ? "📅 Switched timetable to 24-Hour Master Schedule (6h Sleep • SSC CGL)"
+          ? "📅 Switched timetable to 24-Hour Master Schedule (MERN Stack • GenAI • Screen Detox)"
           : "📅 Restored default adaptive daily schedule",
         "info"
       );
@@ -119,9 +143,12 @@ export default function App() {
     if (sessionData.track === "mern") {
       updatedHabits.mern = true;
       updatedHabits.mernMorning = true;
-    } else if (sessionData.track === "gov") {
-      updatedHabits.gov = true;
-      updatedHabits.govMorning = true;
+    } else if (sessionData.track === "genai" || sessionData.track === "gov") {
+      updatedHabits.genai = true;
+      updatedHabits.genaiNight = true;
+    } else if (sessionData.track === "detox") {
+      updatedHabits.screenTimeDetox = true;
+      updatedHabits.noInstagram = true;
     } else {
       updatedHabits.roomClean = true;
     }
@@ -413,13 +440,62 @@ export default function App() {
   const handleReset = async () => {
     try {
       await resetAllHabits();
+      await updateSettings({
+        startDate: "2026-10-12",
+        targetDate: "2026-11-24",
+        birthdayDate: "2026-11-24",
+      });
+
+      // Reset MERN & GenAI trackers to covered: false, testDone: false
+      try {
+        const mern = await getMernTracker();
+        if (mern?.subjects) {
+          const cleared = mern.subjects.map((s) => ({
+            ...s,
+            topics: (s.topics || []).map((t) => ({ ...t, covered: false, testDone: false })),
+          }));
+          await updateMernTracker(cleared);
+        }
+      } catch (e) {}
+
+      try {
+        const genai = await getGenaiTracker();
+        if (genai?.subjects) {
+          const cleared = genai.subjects.map((s) => ({
+            ...s,
+            topics: (s.topics || []).map((t) => ({ ...t, covered: false, testDone: false })),
+          }));
+          await updateGenaiTracker(cleared);
+        }
+      } catch (e) {}
+
+      // Clear all cached habits, streaks, missions in localStorage
+      if (typeof window !== "undefined") {
+        Object.keys(localStorage)
+          .filter(
+            (k) =>
+              k.startsWith("ht_cache_") ||
+              k.startsWith("today_mission_") ||
+              k.startsWith("tomorrow_goal_")
+          )
+          .forEach((k) => localStorage.removeItem(k));
+      }
+
       setMonthData({});
       setStreaks({});
       setMernTotal(0);
+      setStartDate("2026-10-12");
+      setActiveDateStr(tomorrowStr);
+      setTodayMission("🏃‍♂️ Day 1: 5:30 AM Outdoor Running + Striver DSA + MERN & GenAI Sprint");
+      localStorage.setItem(
+        "today_mission_" + tomorrowStr,
+        "🏃‍♂️ Day 1: 5:30 AM Outdoor Running + Striver DSA + MERN & GenAI Sprint"
+      );
       setShowReset(false);
-      showToast("All habit data reset", "info");
+      setTrackerRefreshTrigger((p) => p + 1);
+      showToast("✨ Everything reset to zero! Day 1 starts tomorrow at 5:00 AM (5:30 AM Outdoor Running).", "success");
     } catch (e) {
-      showToast("Reset failed", "warn");
+      showToast("Reset failed: " + e.message, "warn");
     }
   };
 
@@ -438,14 +514,14 @@ export default function App() {
   }, [showReset, showMentalVault, showBooks, selectedTask, modalDate]);
 
   const daysLeft = targetDate ? daysUntilTarget(targetDate) : 0;
-  const todayStr = fmtDate(new Date());
+  const todayStr = activeDateStr; // Map todayStr to active working date (tomorrow by default so today is not displayed)
   const todayTasks = targetDate
     ? getDayTasks(todayStr, targetDate, monthData[todayStr], use24HourMasterSchedule ? "master24h" : null)
     : [];
   const todaySched = targetDate
     ? getSchedule(todayStr, targetDate, use24HourMasterSchedule ? "master24h" : null)
     : null;
-  const todayTopic = getTopicForDay(todayStr);
+  const todayTopic = getTopicForDay(todayStr, startDate);
 
   return (
     <>
@@ -484,7 +560,7 @@ export default function App() {
                 )}
               </div>
               <p className="text-bark-muted text-xs font-semibold">
-                MERN Full-Stack & Govt Exam Sprint
+                MERN Full-Stack, Generative AI & Screen Detox Sprint
               </p>
             </div>
           </div>
@@ -554,17 +630,69 @@ export default function App() {
               </button>
 
               <button
+                id="header-sticky-notes-btn"
+                onClick={() => setShowStickyNotesModal(true)}
+                className="px-3 py-1.5 bg-gradient-to-r from-amber-600 via-amber-700 to-stone-800 hover:from-amber-700 hover:to-stone-900 text-white text-xs font-black rounded-lg flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                title="Physical Wall Sticky Notes & Highlighters Blueprint"
+              >
+                <span className="text-[11px]">📌</span>
+                <span className="hidden sm:inline">Wall Sticky Notes</span>
+                <span className="sm:hidden">Notes</span>
+              </button>
+
+              <button
                 id="header-morning-btn"
                 onClick={() => {
-                  const el = document.getElementById("morning-session-section");
-                  if (el) el.scrollIntoView({ behavior: "smooth" });
+                  setMainDashboardTab("today");
+                  setShowCardioGuide(true);
+                  showToast("🌅 Switched to 5:30 AM Outdoor Running & Morning Protocol", "info");
                 }}
                 className="px-3 py-1.5 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-600 hover:from-amber-600 hover:to-rose-700 text-white text-xs font-black rounded-lg flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
-                title="4:30 AM Morning Protocol & 30-Min Cardio Routine"
+                title="5:30 AM Outdoor Running & Morning Routine Guide"
               >
-                <span>🌅</span>
-                <span className="hidden sm:inline">Morning Session</span>
-                <span className="sm:hidden">Morning</span>
+                <span>🏃‍♂️</span>
+                <span className="hidden sm:inline">5:30 AM Running</span>
+                <span className="sm:hidden">Running</span>
+              </button>
+
+              <button
+                id="header-24h-schedule-btn"
+                onClick={() => {
+                  setMainDashboardTab("today");
+                  setShowCardioGuide(false);
+                  showToast("📅 Switched to Today's Flow & 24H Master Timetable", "info");
+                }}
+                className="px-3 py-1.5 bg-amber-50 text-amber-900 hover:bg-amber-100 border border-amber-300 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+                title="View Whole Day Timetable & Live Tasks"
+              >
+                <i className="fa-solid fa-calendar-days text-amber-600"></i>
+                <span className="hidden sm:inline">24H Timetable</span>
+              </button>
+
+              <button
+                id="header-trackers-btn"
+                onClick={() => {
+                  setMainDashboardTab("trackers");
+                  showToast("💻 Switched to MERN Stack & GenAI Curriculum Roadmaps", "info");
+                }}
+                className="px-3 py-1.5 bg-indigo-50 text-indigo-900 hover:bg-indigo-100 border border-indigo-200 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+                title="MERN & GenAI Roadmaps"
+              >
+                <i className="fa-solid fa-code text-indigo-600"></i>
+                <span className="hidden sm:inline">MERN & GenAI</span>
+              </button>
+
+              <button
+                id="header-detox-btn"
+                onClick={() => {
+                  setMainDashboardTab("detox");
+                  showToast("📵 Switched to Digital Detox & Screen Time Guard (< 30m)", "info");
+                }}
+                className="px-3 py-1.5 bg-rose-50 text-rose-900 hover:bg-rose-100 border border-rose-300 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+                title="Jump to Digital Detox & Instagram Screen Time Guard (< 30m)"
+              >
+                <i className="fa-solid fa-mobile-screen-button text-rose-600"></i>
+                <span className="hidden sm:inline">Screen Detox (&lt;30m)</span>
               </button>
 
               <button
@@ -574,20 +702,7 @@ export default function App() {
                 title="View Recommended Books & Amazon Links"
               >
                 <i className="fa-solid fa-book-open text-purple-600"></i>
-                <span className="hidden sm:inline">Book List</span>
-              </button>
-
-              <button
-                id="header-24h-schedule-btn"
-                onClick={() => {
-                  const el = document.getElementById("master-24h-schedule-section");
-                  if (el) el.scrollIntoView({ behavior: "smooth" });
-                }}
-                className="px-3 py-1.5 bg-amber-50 text-amber-900 hover:bg-amber-100 border border-amber-300 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
-                title="Jump to The Complete 24-Hour Master Schedule"
-              >
-                <i className="fa-solid fa-calendar-days text-amber-600"></i>
-                <span className="hidden sm:inline">24H Master Schedule</span>
+                <span className="hidden sm:inline">Books</span>
               </button>
 
               <div className="flex flex-col items-end gap-1">
@@ -608,9 +723,13 @@ export default function App() {
 
       {/* Banner */}
       {daysLeft > 0 ? (
-        <div className="bg-gradient-to-r from-indigo-600 via-teal-600 to-indigo-700 text-white text-center py-2 px-4 text-xs sm:text-sm font-bold tracking-wide shadow-xs flex items-center justify-center gap-2">
+        <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 text-white text-center py-2 px-4 text-xs sm:text-sm font-bold tracking-wide shadow-xs flex items-center justify-center gap-2">
           <i className="fa-solid fa-bolt"></i>
-          <span>SPRINT MODE — {daysLeft} days remaining for MERN & Govt Exam mastery</span>
+          <span>
+            {isTomorrowActive
+              ? `🚀 DAY 1 SPRINT LAUNCH — Starting Tomorrow (Monday, Oct 12) • ${daysLeft} days remaining • Starting everything from zero`
+              : `SPRINT MODE — ${daysLeft} days remaining for MERN Stack & Generative AI Mastery (Screen Time < 30m)`}
+          </span>
         </div>
       ) : (
         <div className="bg-teal-700 text-white text-center py-2 px-4 text-xs sm:text-sm font-bold tracking-wide shadow-xs flex items-center justify-center gap-2">
@@ -626,7 +745,7 @@ export default function App() {
             <i className="fa-solid fa-crosshairs"></i>
           </span>
           <span className="text-xs font-black uppercase tracking-wider text-amber-100 flex-shrink-0">
-            Today's #1 Mission:
+            {isTomorrowActive ? "Day 1 Launch Target (Tomorrow):" : "Today's #1 Mission:"}
           </span>
           {isEditingMission ? (
             <form
@@ -638,7 +757,7 @@ export default function App() {
                   localStorage.setItem("today_mission_" + todayStr, val);
                   localStorage.setItem("tomorrow_goal_" + todayStr, val);
                   setIsEditingMission(false);
-                  showToast("🎯 Today's Core Mission locked in!", "success");
+                  showToast("🎯 Core Target locked in!", "success");
                 }
               }}
               className="flex items-center gap-2 flex-1 max-w-md"
@@ -668,7 +787,7 @@ export default function App() {
           ) : (
             <div className="flex items-center gap-2 text-xs font-extrabold text-white truncate">
               <span className={monthData[todayStr]?.habits?.coreMission ? "line-through opacity-75" : ""}>
-                {todayMission || "Click 'Set Goal' to lock in your #1 target for today!"}
+                {todayMission || (isTomorrowActive ? "5:30 AM Outdoor Run + Striver DSA + MERN & GenAI Sprint" : "Click 'Set Goal' to lock in target!")}
               </span>
             </div>
           )}
@@ -714,7 +833,7 @@ export default function App() {
                 setIsEditingMission(true);
               }}
               className="px-2.5 py-1 bg-black/20 hover:bg-black/30 text-white text-[11px] font-bold rounded-lg cursor-pointer transition-all flex items-center gap-1"
-              title="Edit today's core target"
+              title="Edit target"
             >
               <i className="fa-solid fa-pen-to-square text-[10px]"></i>
               <span>{todayMission ? "Edit" : "Set Goal"}</span>
@@ -724,284 +843,436 @@ export default function App() {
       </div>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-        {/* REAL-TIME CHRONO ADVISOR: WHAT TO STUDY RIGHT NOW */}
-        <ChronoAdvisor
-          onSelectTrack={(track) => {
-            setActiveTrackerTab(track === "gov" ? "gov" : "mern");
-            const el = document.getElementById("master-trackers-section");
-            if (el) el.scrollIntoView({ behavior: "smooth" });
-            showToast(`Switched view to ${track === "gov" ? "Government Exam" : "MERN & DSA"} Track`, "info");
-          }}
-          onOpenVault={() => setShowMentalVault(true)}
-          onOpenBedtimeSummary={() => setShowBedtimeSummary(true)}
-        />
+        {/* ══════════════════════════════════════════════════════════════
+            TOP EXECUTIVE NAVIGATION SYSTEM (5 DEDICATED APP HUBS)
+        ══════════════════════════════════════════════════════════════ */}
+        <div className="bg-white rounded-2xl border border-cream-deep p-2 sm:p-2.5 shadow-sm">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+            {/* TAB 1: TODAY / TOMORROW FLOW */}
+            <button
+              onClick={() => {
+                setMainDashboardTab("today");
+                setShowCardioGuide(false);
+              }}
+              className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
+                mainDashboardTab === "today"
+                  ? "bg-slate-900 text-white shadow-md shadow-slate-900/25"
+                  : "text-bark-muted hover:text-bark hover:bg-cream/60"
+              }`}
+            >
+              <i className="fa-solid fa-compass text-amber-400"></i>
+              <span>{isTomorrowActive ? "🚀 Tomorrow's Flow & 24H Timetable" : "🎯 Today's Flow & 24H Timetable"}</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            </button>
 
-        {/* AI DAILY COPILOT & SMART DECISION HUB */}
-        <SmartCopilotAdvisor
-          monthData={monthData}
-          todayStr={todayStr}
-          todaySched={todaySched}
-          todayTopic={todayTopic}
-          daysLeft={daysLeft}
-          onSelectTrack={(track) => {
-            setActiveTrackerTab(track === "gov" ? "gov" : "mern");
-            const el = document.getElementById("master-trackers-section");
-            if (el) el.scrollIntoView({ behavior: "smooth" });
-            showToast(`Switched view to ${track === "gov" ? "Government Exam" : "MERN & DSA"} Track`, "info");
-          }}
-          onOpenDrill={() => setShowRapidDrill(true)}
-          onOpenVault={() => setShowMentalVault(true)}
-          onOpenRescue={() => setShowRescueModal(true)}
-          onShiftSchedule={handleShiftSchedule}
-          showToast={showToast}
-        />
+            {/* TAB 2: TRACKERS */}
+            <button
+              onClick={() => setMainDashboardTab("trackers")}
+              className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
+                mainDashboardTab === "trackers"
+                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/25"
+                  : "text-bark-muted hover:text-bark hover:bg-cream/60"
+              }`}
+            >
+              <i className="fa-solid fa-code text-indigo-300"></i>
+              <span>💻 MERN & GenAI Roadmaps</span>
+            </button>
 
-        {/* 🌅 4:30 AM MORNING SESSION & 30-MIN CARDIO POWER PROTOCOL */}
-        <MorningSession
-          todayStr={todayStr}
-          dayData={monthData[todayStr] || {}}
-          onToggleHabit={toggleHabit}
-          showToast={showToast}
-        />
-
-        {/* 📅 24-HOUR MASTER SCHEDULE (6 HOURS SLEEP • ZERO MERN • SSC CGL PRIME FOCUS) */}
-        <MasterSchedule24H
-          todayStr={todayStr}
-          dayData={monthData[todayStr] || {}}
-          onToggleHabit={toggleHabit}
-          showToast={showToast}
-          isActiveSchedule={use24HourMasterSchedule}
-          onActivateSchedule={toggleUse24HourMasterSchedule}
-        />
-
-        {/* TODAY SCHEDULE & CURRICULUM TIMELINE */}
-        <section className="bg-white rounded-2xl border border-cream-deep p-4 sm:p-5 shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="font-display font-bold text-base text-bark">
-                  Today's Schedule & Routine
-                </h2>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
-                  {todayTopic.dayName}: {todayTopic.badge}
-                </span>
-              </div>
-              <p className="text-xs text-bark-muted mt-0.5">
-                {new Date().toLocaleDateString("en-US", {
-                  weekday: "long",
-                  month: "long",
-                  day: "numeric",
-                })}{" "}
-                —{" "}
-                <span className="font-semibold text-indigo-700">
-                  {todaySched?.label}
-                </span>
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={toggleUse24HourMasterSchedule}
-                className={`px-2.5 py-1 rounded-lg border text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                  use24HourMasterSchedule
-                    ? "bg-amber-100 text-amber-900 border-amber-300 font-extrabold"
-                    : "border-cream-deep text-bark-muted hover:text-bark hover:bg-cream/60"
-                }`}
-                title="Toggle between default adaptive schedule and 24-hour master schedule"
-              >
-                <i className="fa-solid fa-clock text-[10px]"></i>
-                <span>{use24HourMasterSchedule ? "24H Master Active" : "Use 24H Master"}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setShowTimeline(!showTimeline)}
-                className="px-2.5 py-1 rounded-lg border border-cream-deep text-xs font-bold text-bark-muted hover:text-bark hover:bg-cream/60 transition-colors flex items-center gap-1.5 cursor-pointer"
-                title="Toggle timeline visibility"
-              >
-                <i className={`fa-solid ${showTimeline ? "fa-chevron-up" : "fa-chevron-down"} text-[10px]`}></i>
-                <span>{showTimeline ? "Minimize Timetable" : "Show Full Timetable"}</span>
-              </button>
-
-              <span className="text-xs font-bold text-bark-muted hidden sm:inline">
-                Sleep target:
+            {/* TAB 3: NAUKRI PRO RECRUITER ENGINE */}
+            <button
+              onClick={() => setMainDashboardTab("naukri")}
+              className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
+                mainDashboardTab === "naukri"
+                  ? "bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md shadow-amber-500/25"
+                  : "text-bark-muted hover:text-bark hover:bg-cream/60"
+              }`}
+            >
+              <i className="fa-solid fa-crown text-amber-500"></i>
+              <span>💼 Naukri Pro Engine</span>
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-slate-900 text-amber-300">
+                10 AM
               </span>
-              <span
-                className={`${todaySched?.badgeClass} text-xs font-bold px-3 py-1 rounded-full shadow-xs`}
-              >
-                <i className={`fa-solid ${todaySched?.icon} mr-1`}></i>
-                {todaySched?.sleepTarget}h
-              </span>
-            </div>
+            </button>
+
+            {/* TAB 4: DETOX */}
+            <button
+              onClick={() => setMainDashboardTab("detox")}
+              className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
+                mainDashboardTab === "detox"
+                  ? "bg-rose-600 text-white shadow-md shadow-rose-600/25"
+                  : "text-bark-muted hover:text-bark hover:bg-cream/60"
+              }`}
+            >
+              <i className="fa-solid fa-mobile-screen-button text-rose-300"></i>
+              <span>📵 Screen Detox Guard (&lt;30m)</span>
+            </button>
+
+            {/* TAB 5: CALENDAR */}
+            <button
+              onClick={() => setMainDashboardTab("calendar")}
+              className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
+                mainDashboardTab === "calendar"
+                  ? "bg-teal-700 text-white shadow-md shadow-teal-700/25"
+                  : "text-bark-muted hover:text-bark hover:bg-cream/60"
+              }`}
+            >
+              <i className="fa-solid fa-calendar-days text-teal-300"></i>
+              <span>📅 Monthly Calendar & Streaks</span>
+            </button>
+
+            {/* TAB 6: MINDSET */}
+            <button
+              onClick={() => setMainDashboardTab("mindset")}
+              className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
+                mainDashboardTab === "mindset"
+                  ? "bg-purple-700 text-white shadow-md shadow-purple-700/25"
+                  : "text-bark-muted hover:text-bark hover:bg-cream/60"
+              }`}
+            >
+              <i className="fa-solid fa-brain text-purple-300"></i>
+              <span>🧠 Mindset & Drills</span>
+            </button>
           </div>
+        </div>
 
-          {/* Timeline horizontal scroll cards */}
-          {showTimeline && (
-            <div className="flex gap-2.5 overflow-x-auto pb-2 -mx-1 px-1">
-            {todayTasks.map((t, i) => {
-              const cs = CAT_STYLES[t.cat] || CAT_STYLES.routine;
-              const dd = monthData[todayStr];
-              const ck = t.trackable ? !!dd?.habits?.[t.key] : null;
-              const li = t.key ? dd?.lateEntries?.[t.key] : null;
-              const hi =
-                t.cat === "gov" ||
-                t.cat === "mern" ||
-                t.cat === "pooja" ||
-                t.cat === "exercise";
+        {/* ══════════════════════════════════════════════════════════════
+            TAB 1: TODAY / TOMORROW MASTER TIMETABLE (DEFAULT HUB)
+        ══════════════════════════════════════════════════════════════ */}
+        {mainDashboardTab === "today" && (
+          <div className="space-y-6">
+            {/* Core Hero HUD: Tomorrow Day 1 launch countdown, 5:30 AM outdoor running, daily vitals, and 24H timetable */}
+            <TodayLiveHUD
+              todayStr={todayStr}
+              todayTopic={todayTopic}
+              dayData={monthData[todayStr] || {}}
+              onToggleHabit={toggleHabit}
+              showToast={showToast}
+              onOpenTaskDetail={setSelectedTask}
+              onOpenDetox={() => setMainDashboardTab("detox")}
+              onOpenNaukri={() => setMainDashboardTab("naukri")}
+              onOpenStickyNotes={() => setShowStickyNotesModal(true)}
+              isTomorrow={isTomorrowActive}
+              displayDateStr={activeDateStr}
+              onSwitchDate={(toTomorrow) => setActiveDateStr(toTomorrow ? tomorrowStr : actualTodayStr)}
+              onResetAllToZero={handleReset}
+            />
 
-              return (
-                <div
-                  key={i}
-                  onClick={() => setSelectedTask(t)}
-                  className={`tl-card flex-shrink-0 w-[170px] ${cs.bg} ${cs.border} border rounded-xl p-3 cursor-pointer hover:shadow-md hover:border-indigo-300 transition-all ${hi ? "ring-1 ring-black/5" : ""} ${li ? "ring-1 ring-amber-400" : ""} ${t.isCustom ? "ring-1 ring-bark-light/30" : ""}`}
+            {/* Power Drawer Bar: Expand Running Protocol / Expand AI Copilot */}
+            <div className="flex flex-wrap items-center justify-between gap-3 bg-white rounded-2xl border border-cream-deep p-3 sm:p-4 shadow-sm">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-black uppercase tracking-wider text-bark-muted">
+                  Quick Focus Tools:
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowCardioGuide(!showCardioGuide)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border ${
+                    showCardioGuide
+                      ? "bg-amber-500 text-white border-amber-600 shadow-xs"
+                      : "bg-amber-50 text-amber-900 border-amber-200 hover:bg-amber-100"
+                  }`}
                 >
-                  <div className="flex items-center justify-between mb-1">
-                    <div
-                      className={`text-[10px] font-bold ${cs.text} uppercase tracking-wider flex items-center gap-1`}
-                    >
-                      <i className={`fa-solid ${cs.icon} text-[9px]`}></i>
-                      {t.time}
-                      {t.pinned && (
-                        <i className="fa-solid fa-thumbtack text-[7px] text-bark-light"></i>
-                      )}
-                      {t.isCustom && (
-                        <i className="fa-solid fa-plus text-[7px] text-bark-light"></i>
-                      )}
-                    </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedTask(t);
-                      }}
-                      className="text-bark-light hover:text-indigo-600 transition-colors p-0.5"
-                      title="View description & instructions"
-                    >
-                      <i className="fa-solid fa-circle-info text-[11px]"></i>
-                    </button>
-                  </div>
+                  <i className="fa-solid fa-person-running"></i>
+                  <span>{showCardioGuide ? "Hide Running Guide" : "🏃‍♂️ 5:30 AM Outdoor Running Guide"}</span>
+                </button>
 
-                  <div
-                    className={`text-xs font-medium leading-snug ${t.trackable && ck ? "line-through opacity-60 text-bark" : "text-bark"}`}
-                  >
-                    {t.label}
-                  </div>
+                <button
+                  type="button"
+                  onClick={() => setShowCopilotCompanion(!showCopilotCompanion)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border ${
+                    showCopilotCompanion
+                      ? "bg-indigo-600 text-white border-indigo-700 shadow-xs"
+                      : "bg-indigo-50 text-indigo-900 border-indigo-200 hover:bg-indigo-100"
+                  }`}
+                >
+                  <i className="fa-solid fa-robot"></i>
+                  <span>{showCopilotCompanion ? "Hide AI Copilot" : "🤖 AI Copilot & Chrono Advisor"}</span>
+                </button>
 
-                  {t.durMins > 0 && (
-                    <div className="text-[10px] text-bark-light mt-1">
-                      {t.durMins} min
-                    </div>
-                  )}
+                <button
+                  type="button"
+                  onClick={() => setShowStickyNotesModal(true)}
+                  className="px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer border bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100 shadow-2xs"
+                  title="View 6 Wall Sticky Notes & Highlighters Guide"
+                >
+                  <span>📌</span>
+                  <span>Wall Sticky Notes &amp; Highlighters</span>
+                </button>
+              </div>
 
-                  {t.trackable && (
-                    <div
-                      className="mt-2 flex items-center gap-1.5"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <input
-                        type="checkbox"
-                        className={`habit-cb habit-cb-sm ${ck ? "checked" : ""}`}
-                        checked={!!ck}
-                        onChange={() => toggleHabit(todayStr, t.key)}
-                      />
-                      <span
-                        className={`text-[10px] ${ck ? (li ? "text-amber-700" : "text-emerald-700") + " font-bold" : "text-bark-light"}`}
-                      >
-                        {ck ? (li ? "Late" : "Done") : "Track"}
-                      </span>
-                    </div>
-                  )}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setMainDashboardTab("trackers")}
+                  className="px-3 py-1.5 bg-cream/70 hover:bg-cream-dark text-bark text-xs font-bold rounded-xl border border-cream-deep transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <i className="fa-solid fa-arrow-right text-[10px] text-indigo-600"></i>
+                  <span>Open Full Syllabus</span>
+                </button>
+              </div>
+            </div>
 
-                  {li && (
-                    <div className="mt-1 text-[9px] text-amber-700 font-semibold truncate">
-                      <i className="fa-solid fa-clock mr-0.5"></i>
-                      {li.actualTime} — {li.reason}
-                    </div>
-                  )}
+            {/* Optional Expandable: 5:30 AM Outdoor Running & Morning Routine Deep Dive */}
+            {showCardioGuide && (
+              <div className="animate-fadeIn">
+                <MorningSession
+                  todayStr={todayStr}
+                  dayData={monthData[todayStr] || {}}
+                  onToggleHabit={toggleHabit}
+                  showToast={showToast}
+                />
+              </div>
+            )}
+
+            {/* Optional Expandable: AI Chrono Advisor & Copilot Hub */}
+            {showCopilotCompanion && (
+              <div className="space-y-5 animate-fadeIn">
+                <ChronoAdvisor
+                  onSelectTrack={(track) => {
+                    setActiveTrackerTab(track === "mern" ? "mern" : "genai");
+                    setMainDashboardTab("trackers");
+                    showToast(`Switched view to ${track === "mern" ? "MERN & DSA" : "Generative AI & Autonomous Agents"} Track`, "info");
+                  }}
+                  onOpenVault={() => setShowMentalVault(true)}
+                  onOpenBedtimeSummary={() => setShowBedtimeSummary(true)}
+                />
+
+                <SmartCopilotAdvisor
+                  monthData={monthData}
+                  todayStr={todayStr}
+                  todaySched={todaySched}
+                  todayTopic={todayTopic}
+                  daysLeft={daysLeft}
+                  onSelectTrack={(track) => {
+                    setActiveTrackerTab(track === "mern" ? "mern" : "genai");
+                    setMainDashboardTab("trackers");
+                    showToast(`Switched view to ${track === "mern" ? "MERN & DSA" : "Generative AI & Autonomous Agents"} Track`, "info");
+                  }}
+                  onOpenDrill={() => setShowRapidDrill(true)}
+                  onOpenVault={() => setShowMentalVault(true)}
+                  onOpenRescue={() => setShowRescueModal(true)}
+                  onShiftSchedule={handleShiftSchedule}
+                  showToast={showToast}
+                />
+              </div>
+            )}
+
+            {/* Quick Study Session Logger directly accessible on today page */}
+            <StudySessionLogger
+              dateStr={todayStr}
+              dayData={monthData[todayStr] || {}}
+              onSaveDay={save}
+              onTrackersUpdated={handleTrackersUpdated}
+              showToast={showToast}
+              refreshTrigger={trackerRefreshTrigger}
+              onOpenVault={() => setShowMentalVault(true)}
+              onOpenBedtimeSummary={() => setShowBedtimeSummary(true)}
+            />
+          </div>
+        )}
+
+        {/* ══════════════════════════════════════════════════════════════
+            TAB 2: MERN & GENAI CURRICULUM ROADMAPS
+        ══════════════════════════════════════════════════════════════ */}
+        {mainDashboardTab === "trackers" && (
+          <div id="master-trackers-section" className="space-y-6">
+            <div className="bg-white rounded-2xl border border-cream-deep p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h2 className="font-display font-black text-lg text-bark">
+                  Master Technical Curriculums & Interview Drills
+                </h2>
+                <p className="text-xs text-bark-muted">
+                  Full topic checklists, LeetCode / Striver DSA patterns, system architecture, and Agentic AI workflows.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setActiveTrackerTab("mern")}
+                  className={`px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition-all cursor-pointer ${
+                    activeTrackerTab === "mern"
+                      ? "bg-indigo-600 text-white shadow-sm"
+                      : "bg-cream/60 text-bark-muted hover:bg-cream border border-cream-deep"
+                  }`}
+                >
+                  <i className="fa-solid fa-code"></i>
+                  <span>MERN & DSA Tracker</span>
+                </button>
+                <button
+                  onClick={() => setActiveTrackerTab("genai")}
+                  className={`px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition-all cursor-pointer ${
+                    activeTrackerTab === "genai" || activeTrackerTab === "gov"
+                      ? "bg-purple-600 text-white shadow-sm"
+                      : "bg-cream/60 text-bark-muted hover:bg-cream border border-cream-deep"
+                  }`}
+                >
+                  <i className="fa-solid fa-robot"></i>
+                  <span>GenAI & Autonomous Agents</span>
+                </button>
+              </div>
+            </div>
+
+            {activeTrackerTab === "mern" ? (
+              <MernTracker
+                refreshTrigger={trackerRefreshTrigger}
+                onTrackerChanged={() => setTrackerRefreshTrigger((p) => p + 1)}
+              />
+            ) : (
+              <GenaiTracker
+                refreshTrigger={trackerRefreshTrigger}
+                onTrackerChanged={() => setTrackerRefreshTrigger((p) => p + 1)}
+              />
+            )}
+
+            <StudySessionLogger
+              dateStr={todayStr}
+              dayData={monthData[todayStr] || {}}
+              onSaveDay={save}
+              onTrackersUpdated={handleTrackersUpdated}
+              showToast={showToast}
+              refreshTrigger={trackerRefreshTrigger}
+              onOpenVault={() => setShowMentalVault(true)}
+              onOpenBedtimeSummary={() => setShowBedtimeSummary(true)}
+            />
+          </div>
+        )}
+
+        {/* ══════════════════════════════════════════════════════════════
+            TAB 3: DIGITAL DETOX & SCREEN TIME GUARD (< 30 MINS)
+        ══════════════════════════════════════════════════════════════ */}
+        {mainDashboardTab === "detox" && (
+          <div id="digital-detox-section" className="space-y-6">
+            <DigitalDetoxGuard
+              todayStr={todayStr}
+              dayData={monthData[todayStr] || {}}
+              onToggleHabit={toggleHabit}
+              showToast={showToast}
+            />
+          </div>
+        )}
+
+        {/* ══════════════════════════════════════════════════════════════
+            TAB 4: MONTHLY CALENDAR & STREAKS
+        ══════════════════════════════════════════════════════════════ */}
+        {mainDashboardTab === "calendar" && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <Calendar
+                months={months}
+                activeMonth={activeMonth}
+                onSwitchMonth={switchMonth}
+                startDate={startDate}
+                targetDate={targetDate}
+                monthData={monthData}
+                onOpenDay={setModalDate}
+              />
+              <Sidebar
+                startDate={startDate}
+                targetDate={targetDate}
+                mernTotal={mernTotal}
+                streaks={streaks}
+                monthData={monthData}
+                onOpenBooks={() => setShowBooks(true)}
+                onReset={() => setShowReset(true)}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* ══════════════════════════════════════════════════════════════
+            TAB 5: MINDSET, WEAKNESS RADAR & RAPID DRILLS
+        ══════════════════════════════════════════════════════════════ */}
+        {mainDashboardTab === "mindset" && (
+          <div className="space-y-6">
+            {/* Quick Action Launchpad */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div
+                onClick={() => setShowRapidDrill(true)}
+                className="p-5 rounded-2xl bg-gradient-to-br from-teal-500 to-emerald-600 text-white cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all"
+              >
+                <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-lg mb-3">
+                  <i className="fa-solid fa-gamepad"></i>
                 </div>
-              );
-            })}
-          </div>
-          )}
-        </section>
+                <h3 className="font-bold text-sm">60-Second Rapid Drill</h3>
+                <p className="text-xs text-white/80 mt-1">
+                  High-speed flash recall on MERN, DSA & GenAI concepts.
+                </p>
+                <div className="mt-3 text-[11px] font-black uppercase tracking-wider text-teal-100 flex items-center gap-1">
+                  <span>Start Drill</span>
+                  <i className="fa-solid fa-arrow-right text-[9px]"></i>
+                </div>
+              </div>
 
-        {/* QUICK STUDY LOGGER & AUTO-TICK ENGINE */}
-        <StudySessionLogger
-          dateStr={todayStr}
-          dayData={monthData[todayStr] || {}}
-          onSaveDay={save}
-          onTrackersUpdated={handleTrackersUpdated}
-          showToast={showToast}
-          refreshTrigger={trackerRefreshTrigger}
-          onOpenVault={() => setShowMentalVault(true)}
-          onOpenBedtimeSummary={() => setShowBedtimeSummary(true)}
-        />
+              <div
+                onClick={() => setShowMentalVault(true)}
+                className="p-5 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all"
+              >
+                <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-lg mb-3">
+                  <i className="fa-solid fa-lightbulb"></i>
+                </div>
+                <h3 className="font-bold text-sm">Anti-Boredom Vault</h3>
+                <p className="text-xs text-white/80 mt-1">
+                  Intuitive analogies and mindset shifts to crush procrastination.
+                </p>
+                <div className="mt-3 text-[11px] font-black uppercase tracking-wider text-amber-100 flex items-center gap-1">
+                  <span>Open Vault</span>
+                  <i className="fa-solid fa-arrow-right text-[9px]"></i>
+                </div>
+              </div>
 
-        {/* SPACED REPETITION & WEAKNESS REVISION RADAR */}
-        <RevisionRadar
-          allDays={monthData}
-          onSelectTopicForReview={(item) => {
-            const el = document.getElementById("study-session-logger-section");
-            if (el) {
-              el.scrollIntoView({ behavior: "smooth" });
-            }
-            showToast(`Loaded "${item.topicName}" for 5-Min Spaced Flash Recall!`, "info");
-          }}
-        />
+              <div
+                onClick={() => setShowRescueModal(true)}
+                className="p-5 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 text-white cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all"
+              >
+                <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-lg mb-3">
+                  <i className="fa-solid fa-bolt"></i>
+                </div>
+                <h3 className="font-bold text-sm">15-Min Emergency Rescue</h3>
+                <p className="text-xs text-white/80 mt-1">
+                  Busy or low energy? Save your daily streak in just 15 minutes.
+                </p>
+                <div className="mt-3 text-[11px] font-black uppercase tracking-wider text-indigo-100 flex items-center gap-1">
+                  <span>Save Streak</span>
+                  <i className="fa-solid fa-arrow-right text-[9px]"></i>
+                </div>
+              </div>
 
-        {/* CALENDAR & SIDEBAR GRID */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Calendar
-            months={months}
-            activeMonth={activeMonth}
-            onSwitchMonth={switchMonth}
-            startDate={startDate}
-            targetDate={targetDate}
-            monthData={monthData}
-            onOpenDay={setModalDate}
-          />
-          <Sidebar
-            startDate={startDate}
-            targetDate={targetDate}
-            mernTotal={mernTotal}
-            streaks={streaks}
-            monthData={monthData}
-            onOpenBooks={() => setShowBooks(true)}
-            onReset={() => setShowReset(true)}
-          />
-        </div>
+              <div
+                onClick={() => setShowBedtimeSummary(true)}
+                className="p-5 rounded-2xl bg-gradient-to-br from-slate-900 to-indigo-950 text-white border border-indigo-500/30 cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all"
+              >
+                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-lg mb-3">
+                  <i className="fa-solid fa-moon text-amber-400"></i>
+                </div>
+                <h3 className="font-bold text-sm">Bedtime Reflection</h3>
+                <p className="text-xs text-slate-300 mt-1">
+                  Review today's hours, lock in tomorrow's #1 goal, and sleep deeply.
+                </p>
+                <div className="mt-3 text-[11px] font-black uppercase tracking-wider text-amber-300 flex items-center gap-1">
+                  <span>Start Review</span>
+                  <i className="fa-solid fa-arrow-right text-[9px]"></i>
+                </div>
+              </div>
+            </div>
 
-        {/* SYLLABUS & TRACKER SECTION (TABS: MERN / GOV EXAM) */}
-        <div id="master-trackers-section" className="space-y-4">
-          <div className="flex items-center gap-2 border-b border-cream-deep pb-3">
-            <button
-              onClick={() => setActiveTrackerTab("mern")}
-              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${activeTrackerTab === "mern" ? "bg-indigo-600 text-white shadow-sm" : "bg-white text-bark-muted hover:bg-cream-dark border border-cream-deep"}`}
-            >
-              <i className="fa-solid fa-code"></i>
-              MERN & DSA Interview Master Tracker
-            </button>
-            <button
-              onClick={() => setActiveTrackerTab("gov")}
-              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${activeTrackerTab === "gov" ? "bg-terra-dark text-white shadow-sm" : "bg-white text-bark-muted hover:bg-cream-dark border border-cream-deep"}`}
-            >
-              <i className="fa-solid fa-book-bookmark"></i>
-              Government Exam Tracker
-            </button>
-          </div>
-
-          {activeTrackerTab === "mern" ? (
-            <MernTracker
-              refreshTrigger={trackerRefreshTrigger}
-              onTrackerChanged={() => setTrackerRefreshTrigger((p) => p + 1)}
+            {/* Spaced Repetition & Revision Radar */}
+            <RevisionRadar
+              allDays={monthData}
+              onSelectTopicForReview={(item) => {
+                setActiveTrackerTab("mern");
+                setMainDashboardTab("trackers");
+                showToast(`Loaded "${item.topicName}" for spaced recall!`, "info");
+              }}
             />
-          ) : (
-            <ExamTracker
-              refreshTrigger={trackerRefreshTrigger}
-              onTrackerChanged={() => setTrackerRefreshTrigger((p) => p + 1)}
-            />
-          )}
-        </div>
+          </div>
+        )}
+
+        {/* ══════════════════════════════════════════════════════════════
+            TAB: NAUKRI PRO RECRUITER INFLUX ENGINE & PLAYBOOK
+        ══════════════════════════════════════════════════════════════ */}
+        {mainDashboardTab === "naukri" && (
+          <NaukriProManager showToast={showToast} />
+        )}
       </main>
 
       {/* DAY DETAIL MODAL */}
@@ -1052,6 +1323,14 @@ export default function App() {
       {/* ANTI-BOREDOM & MENTAL MODELS VAULT MODAL */}
       {showMentalVault && (
         <MentalModelsModal onClose={() => setShowMentalVault(false)} />
+      )}
+
+      {/* WALL STICKY NOTES & HIGHLIGHTER STUDIO MODAL */}
+      {showStickyNotesModal && (
+        <StickyNotesStudioModal
+          onClose={() => setShowStickyNotesModal(false)}
+          showToast={showToast}
+        />
       )}
 
       {/* BEDTIME WHOLE DAY SUMMARY & TOMORROW'S PLAN MODAL */}

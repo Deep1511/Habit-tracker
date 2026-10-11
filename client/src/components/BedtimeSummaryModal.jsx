@@ -19,21 +19,21 @@ export default function BedtimeSummaryModal({
 
   // Calculations
   const stats = useMemo(() => {
-    let govMins = 0;
+    let genaiMins = 0;
     let mernMins = 0;
     let lifeMins = 0;
 
     logs.forEach((log) => {
       const m = Number(log.minutes) || 0;
       if (log.track === "mern") mernMins += m;
-      else if (log.track === "gov") govMins += m;
+      else if (log.track === "genai" || log.track === "gov") genaiMins += m;
       else if (log.track === "life") lifeMins += m;
       else {
         // heuristic fallback
         if (log.subjectName?.toLowerCase().includes("mern") || log.subjectName?.toLowerCase().includes("javascript")) {
           mernMins += m;
         } else {
-          govMins += m;
+          genaiMins += m;
         }
       }
     });
@@ -50,14 +50,14 @@ export default function BedtimeSummaryModal({
       lifeMins += 15;
     }
 
-    const totalMins = govMins + mernMins + lifeMins;
+    const totalMins = genaiMins + mernMins + lifeMins;
     const totalHrs = (totalMins / 60).toFixed(1);
 
     // Habits checked
     const checkedHabitsCount = Object.values(h).filter(Boolean).length;
 
     return {
-      govMins,
+      genaiMins,
       mernMins,
       lifeMins,
       totalMins,
@@ -74,14 +74,14 @@ export default function BedtimeSummaryModal({
     const tomorrowsPlan = [];
 
     // Wins
-    if (stats.govMins >= 60) {
-      wins.push(`🏛️ Strong Government Exam execution (${stats.govMins} mins logged).`);
+    if (stats.genaiMins >= 60) {
+      wins.push(`🤖 Strong Generative AI & Agents execution (${stats.genaiMins} mins logged).`);
     }
     if (stats.mernMins >= 60) {
       wins.push(`💻 Solid MERN & DSA coding consistency (${stats.mernMins} mins logged).`);
     }
     if (stats.lifeMins >= 20) {
-      wins.push(`✨ High-value personal productivity & self-care (${stats.lifeMins} mins of reading/cleaning/wellness).`);
+      wins.push(`✨ High-value personal productivity & self-care (${stats.lifeMins} mins of reading/detox/wellness).`);
     }
     if (stats.logsCount >= 2) {
       wins.push(`🎯 Great discipline logging ${stats.logsCount} separate focus sprints today.`);
@@ -91,24 +91,24 @@ export default function BedtimeSummaryModal({
     }
 
     // Diagnostics & Improvements
-    if (stats.mernMins === 0 && stats.govMins > 0) {
-      improvements.push("💻 MERN Stack Gap: You studied Govt Exam today but logged 0 minutes on MERN/DSA. Coding skills decay without daily touchpoints.");
-      tomorrowsPlan.push("🚀 Tomorrow 9:30 AM: Start directly with 1 Striver DSA problem or 1 React Component before afternoon fatigue sets in.");
-    } else if (stats.govMins === 0 && stats.mernMins > 0) {
-      improvements.push("🏛️ Govt Exam Gap: You focused on code today but missed Govt Exam drills. Speed & calculation speed need daily practice.");
-      tomorrowsPlan.push("🚀 Tomorrow 7:30 AM: Solve 20 speed math formulas or 1 Reasoning mock test first thing in the morning.");
-    } else if (stats.govMins > 0 && stats.mernMins > 0) {
-      improvements.push("⚖️ Balanced Dual-Track: You successfully balanced both Govt Exam and MERN tracks today!");
-      tomorrowsPlan.push("🚀 Maintain the dual momentum: 7:30 AM Govt Mock + 9:30 AM MERN DSA sprint.");
+    if (stats.mernMins === 0 && stats.genaiMins > 0) {
+      improvements.push("💻 MERN Stack Gap: You studied GenAI today but logged 0 minutes on MERN/DSA. Algorithmic skills decay without daily touchpoints.");
+      tomorrowsPlan.push("🚀 Tomorrow 4:45 AM: Start directly with 1 Striver DSA problem or 1 React Component before morning transit.");
+    } else if (stats.genaiMins === 0 && stats.mernMins > 0) {
+      improvements.push("🤖 GenAI Gap: You focused on MERN today but missed AI Agent/RAG engineering. Keep modern AI knowledge expanding daily.");
+      tomorrowsPlan.push("🚀 Tomorrow 8:00 PM: Implement 1 Vector DB query or Autonomous Agent tool calling loop.");
+    } else if (stats.genaiMins > 0 && stats.mernMins > 0) {
+      improvements.push("⚖️ Balanced Dual-Tech Mastery: You successfully executed both MERN DSA and GenAI Agent tracks today!");
+      tomorrowsPlan.push("🚀 Maintain the dual momentum: 4:45 AM Striver DSA + 8:00 PM GenAI Agent sprint.");
     }
 
     if (stats.lifeMins === 0) {
-      improvements.push("🧹 Mindset & Environment: Taking 15 mins to clean your room/washroom or read 10 book pages clears cognitive clutter.");
-      tomorrowsPlan.push("📖 Add 20 mins of book reading or a quick room tidy-up before bed tomorrow.");
+      improvements.push("📵 Screen & Mindset Reset: Take 15 mins to lock your phone in drawer or read 10 book pages to clear cognitive clutter.");
+      tomorrowsPlan.push("📖 Add 20 mins of book reading and phone lockout (< 30m) before bed tomorrow.");
     }
 
     // Sleep advice
-    tomorrowsPlan.push("🌙 Sleep & Memory Lock: Turn off phone/laptop screens by 12:00 AM. 5.5–6 hours of quality sleep consolidates today's memory into permanent storage.");
+    tomorrowsPlan.push("🌙 Sleep & Memory Lock: Turn off phone/laptop screens by 9:30 PM (Digital Sunset). 6.0 hours of quality sleep consolidates today's code into permanent memory. Wake refreshed at 4:30 AM!");
 
     return { wins, improvements, tomorrowsPlan };
   }, [stats]);
@@ -137,9 +137,9 @@ export default function BedtimeSummaryModal({
     const text = `📊 DAILY PRODUCTIVITY SUMMARY (${dateStr})
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
 ⏱️ Total Productive Time: ${stats.totalHrs} hrs (${stats.totalMins} mins)
-🏛️ Govt Exam Study: ${stats.govMins} mins
 💻 MERN & DSA Prep: ${stats.mernMins} mins
-✨ Life & Self-Care: ${stats.lifeMins} mins
+🤖 GenAI & AI Agents: ${stats.genaiMins} mins
+✨ Life & Screen Detox: ${stats.lifeMins} mins
 🎯 Completed Sessions: ${stats.logsCount} logged
 
 🌟 TODAY'S WINS:
@@ -204,39 +204,39 @@ Logged via Antigravity Daily Mastery System`;
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-amber-50 to-amber-100/50 p-3.5 rounded-xl border border-amber-200/80 shadow-2xs">
-              <div className="text-[10px] font-bold text-amber-800 uppercase tracking-wider flex items-center gap-1">
-                <i className="fa-solid fa-landmark"></i> Govt Exam
+            <div className="bg-gradient-to-br from-indigo-50 to-purple-100/50 p-3.5 rounded-xl border border-indigo-200/80 shadow-2xs">
+              <div className="text-[10px] font-bold text-indigo-800 uppercase tracking-wider flex items-center gap-1">
+                <i className="fa-solid fa-code"></i> MERN & DSA
               </div>
-              <div className="font-display font-black text-xl sm:text-2xl text-amber-950 mt-1">
-                {stats.govMins} <span className="text-xs font-bold text-amber-700">mins</span>
+              <div className="font-display font-black text-xl sm:text-2xl text-indigo-950 mt-1">
+                {stats.mernMins} <span className="text-xs font-bold text-indigo-700">mins</span>
               </div>
-              <div className="text-[10px] text-amber-700 mt-0.5 font-medium">
-                {(stats.govMins / 60).toFixed(1)} hrs focused
+              <div className="text-[10px] text-indigo-700 mt-0.5 font-medium">
+                {(stats.mernMins / 60).toFixed(1)} hrs coding
               </div>
             </div>
 
             <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 p-3.5 rounded-xl border border-purple-200/80 shadow-2xs">
               <div className="text-[10px] font-bold text-purple-800 uppercase tracking-wider flex items-center gap-1">
-                <i className="fa-solid fa-code"></i> MERN & DSA
+                <i className="fa-solid fa-brain"></i> GenAI & Agents
               </div>
               <div className="font-display font-black text-xl sm:text-2xl text-purple-950 mt-1">
-                {stats.mernMins} <span className="text-xs font-bold text-purple-700">mins</span>
+                {stats.genaiMins} <span className="text-xs font-bold text-purple-700">mins</span>
               </div>
               <div className="text-[10px] text-purple-700 mt-0.5 font-medium">
-                {(stats.mernMins / 60).toFixed(1)} hrs coding
+                {(stats.genaiMins / 60).toFixed(1)} hrs AI tech
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-teal-50 to-teal-100/50 p-3.5 rounded-xl border border-teal-200/80 shadow-2xs">
-              <div className="text-[10px] font-bold text-teal-800 uppercase tracking-wider flex items-center gap-1">
-                <i className="fa-solid fa-spa"></i> Life & Wellness
+            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 p-3.5 rounded-xl border border-emerald-200/80 shadow-2xs">
+              <div className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1">
+                <i className="fa-solid fa-mobile-screen-button"></i> Life & Detox
               </div>
-              <div className="font-display font-black text-xl sm:text-2xl text-teal-950 mt-1">
-                {stats.lifeMins} <span className="text-xs font-bold text-teal-700">mins</span>
+              <div className="font-display font-black text-xl sm:text-2xl text-emerald-950 mt-1">
+                {stats.lifeMins} <span className="text-xs font-bold text-emerald-700">mins</span>
               </div>
-              <div className="text-[10px] text-teal-700 mt-0.5 font-medium">
-                Reading / Cleaning / Habits
+              <div className="text-[10px] text-emerald-700 mt-0.5 font-medium">
+                Reading / Habits / &lt; 30m Screen
               </div>
             </div>
           </div>
@@ -277,8 +277,8 @@ Logged via Antigravity Daily Mastery System`;
                         {log.track === "mern"
                           ? "MERN & DSA"
                           : log.track === "life"
-                          ? "Life & Wellness"
-                          : "Govt Exam"}
+                          ? "Life & Screen Detox"
+                          : "GenAI & AI Agents"}
                       </span>
                       <span className="text-[10px] font-bold text-bark-light flex items-center gap-1">
                         <i className="fa-regular fa-clock"></i>

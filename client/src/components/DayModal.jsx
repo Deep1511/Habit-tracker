@@ -25,8 +25,9 @@ const CAT_OPTIONS = [
   "routine",
   "exercise",
   "pooja",
-  "gov",
+  "genai",
   "mern",
+  "detox",
   "reading",
   "brain",
   "work",
@@ -199,8 +200,10 @@ export default function DayModal({
             const isLF = lateForm === t.key;
             const isIA = insertAfter === t.key;
             const hi =
+              t.cat === "genai" ||
               t.cat === "gov" ||
               t.cat === "mern" ||
+              t.cat === "detox" ||
               t.cat === "pooja" ||
               t.cat === "exercise";
 

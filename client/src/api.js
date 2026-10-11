@@ -142,15 +142,30 @@ export async function getCraftTotal() {
   return request("/stats/craft-total", {}, "mern_total");
 }
 
-// ── Government Exam Tracker ──────────────────────────────────
+// ── Generative AI & Agentic AI Curriculum Tracker ────────────
+
+export async function getGenaiTracker() {
+  return request("/genai-tracker", {}, "genai_tracker");
+}
+
+export async function updateGenaiTracker(subjects) {
+  setLocalCache("genai_tracker", { key: "main", subjects });
+  return request("/genai-tracker", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ subjects }),
+  });
+}
+
+// ── Government Exam Tracker (Legacy Fallback to GenAI) ──────
 
 export async function getExamTracker() {
-  return request("/exam-tracker", {}, "exam_tracker");
+  return request("/genai-tracker", {}, "genai_tracker");
 }
 
 export async function updateExamTracker(subjects) {
-  setLocalCache("exam_tracker", { key: "main", subjects });
-  return request("/exam-tracker", {
+  setLocalCache("genai_tracker", { key: "main", subjects });
+  return request("/genai-tracker", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ subjects }),

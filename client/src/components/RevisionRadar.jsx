@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { fmtDate } from "../scheduleData";
 
 export default function RevisionRadar({ allDays = {}, onSelectTopicForReview }) {
-  const [activeFilter, setActiveFilter] = useState("all"); // 'all' | 'tough' | 'mern' | 'gov'
+  const [activeFilter, setActiveFilter] = useState("all"); // 'all' | 'tough' | 'mern' | 'genai'
   const [completedRecalls, setCompletedRecalls] = useState({});
 
   const recallQueue = useMemo(() => {
@@ -44,7 +44,7 @@ export default function RevisionRadar({ allDays = {}, onSelectTopicForReview }) 
       if (completedRecalls[item.uniqueKey]) return false;
       if (activeFilter === "tough") return item.isTough;
       if (activeFilter === "mern") return item.track === "mern";
-      if (activeFilter === "gov") return item.track === "gov";
+      if (activeFilter === "genai") return item.track === "genai" || item.track === "gov";
       return true;
     });
   }, [recallQueue, activeFilter, completedRecalls]);
@@ -113,14 +113,14 @@ export default function RevisionRadar({ allDays = {}, onSelectTopicForReview }) 
           </button>
           <button
             type="button"
-            onClick={() => setActiveFilter("gov")}
+            onClick={() => setActiveFilter("genai")}
             className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-              activeFilter === "gov"
-                ? "bg-terra-dark text-white shadow-2xs"
-                : "bg-white text-terra-dark hover:bg-terra-pale border border-terra/20"
+              activeFilter === "genai"
+                ? "bg-purple-600 text-white shadow-2xs"
+                : "bg-white text-purple-700 hover:bg-purple-50 border border-purple-200"
             }`}
           >
-            🏛️ Govt Exam
+            🤖 GenAI &amp; Agents
           </button>
         </div>
       </div>
@@ -140,6 +140,7 @@ export default function RevisionRadar({ allDays = {}, onSelectTopicForReview }) 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {filteredQueue.map((item) => {
             const isMern = item.track === "mern";
+            const isGenai = item.track === "genai" || item.track === "gov";
             return (
               <div
                 key={item.uniqueKey}
@@ -148,7 +149,9 @@ export default function RevisionRadar({ allDays = {}, onSelectTopicForReview }) 
                     ? "border-red-200 hover:border-red-400"
                     : isMern
                     ? "border-indigo-200 hover:border-indigo-400"
-                    : "border-terra/20 hover:border-terra/40"
+                    : isGenai
+                    ? "border-purple-200 hover:border-purple-400"
+                    : "border-emerald-200 hover:border-emerald-400"
                 }`}
               >
                 <div>
@@ -159,10 +162,12 @@ export default function RevisionRadar({ allDays = {}, onSelectTopicForReview }) 
                           ? "bg-red-100 text-red-700 border border-red-200"
                           : isMern
                           ? "bg-indigo-100 text-indigo-800"
-                          : "bg-terra-pale text-terra-dark border border-terra/20"
+                          : isGenai
+                          ? "bg-purple-100 text-purple-800 border border-purple-200"
+                          : "bg-emerald-100 text-emerald-800 border border-emerald-200"
                       }`}
                     >
-                      {item.isTough ? "🔴 Needs Review" : isMern ? "💻 MERN & DSA" : "🏛️ Govt Exam"}
+                      {item.isTough ? "🔴 Needs Review" : isMern ? "💻 MERN & DSA" : isGenai ? "🤖 GenAI & Agents" : "🧘 Life & Detox"}
                     </span>
                     <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
                       {item.daysAgo} day{item.daysAgo > 1 ? "s" : ""} ago

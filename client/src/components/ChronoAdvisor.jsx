@@ -4,62 +4,62 @@ export const CHRONO_PHASES = [
   {
     id: "dawn",
     name: "Dawn Ignition",
-    timeRange: "6:00 AM – 9:00 AM",
-    startHour: 6,
-    endHour: 9,
+    timeRange: "4:30 AM – 8:30 AM",
+    startHour: 4.5,
+    endHour: 8.5,
     energyLevel: "High Alertness & Fresh Working Memory",
     energyBadge: "bg-emerald-100 text-emerald-800 border-emerald-300",
     icon: "fa-sun",
     theme: "emerald",
-    bestTrack: "gov", // 'gov' | 'mern' | 'both'
-    trackTitle: "🏛️ Government Exam Mock Test & Aptitude Drills",
-    secondaryTrackTitle: "💻 Or: Striver DSA 1-2 Logic Problems",
-    durationMins: 45,
+    bestTrack: "mern", // 'mern' | 'genai' | 'both'
+    trackTitle: "💻 Striver DSA Algorithm Mastery & MERN Architecture",
+    secondaryTrackTitle: "🏃 Plus: 30-Min Cardio & Hydration (6:30 AM)",
+    durationMins: 60,
     neuroScience:
-      "Cortisol peak + zero sleep debt. Your working memory buffers are completely clean, making it 2x easier to calculate numerical formulas and tackle full mock test drills before work.",
+      "Cortisol peak + zero sleep debt. Your working memory buffers are completely clean, making it 2x easier to solve Blind 75 / Striver DSA patterns and architect full-stack components before work.",
     recommendedActivity:
-      "Solve 30-45 minutes of Quantitative Aptitude, Reasoning, or 1 fresh Striver DSA algorithm. Do NOT do passive reading.",
-    whatToAvoid: "Social media, emails, and unstructured browsing.",
+      "Solve 1-2 Striver A2Z DSA problems (4:45 AM), do 30m cardio/run (6:30 AM), then build MERN architecture (7:00 AM). Do NOT touch social media.",
+    whatToAvoid: "Opening Instagram, checking phone notifications, or breaking early morning focus.",
   },
   {
     id: "morning_peak",
     name: "Peak Executive Sprint",
-    timeRange: "9:30 AM – 12:30 PM",
-    startHour: 9.5,
-    endHour: 12.5,
+    timeRange: "8:30 AM – 1:00 PM",
+    startHour: 8.5,
+    endHour: 13,
     energyLevel: "Peak Analytical & Logical Synthesis",
     energyBadge: "bg-indigo-100 text-indigo-800 border-indigo-300",
     icon: "fa-bolt-lightning",
     theme: "indigo",
     bestTrack: "mern",
-    trackTitle: "💻 MERN Deep Architecture & Complex Code",
-    secondaryTrackTitle: "🏛️ Or: High-Yield General Studies Deep Dive",
+    trackTitle: "💼 Office Deep Work & Professional Output",
+    secondaryTrackTitle: "📵 Screen Guard: Phone inside bag/drawer (< 30m total)",
     durationMins: 60,
     neuroScience:
-      "Prefrontal cortex neural firing is at its absolute daily peak. This is the golden window for abstract problem-solving, building complex React hooks, or writing backend Express/MongoDB schemas.",
+      "Prefrontal cortex neural firing is at its absolute daily peak. Maintain professional focus, write clean logic, and keep your phone locked away to protect dopamine receptors.",
     recommendedActivity:
-      "Build a real React component, implement JWT/Middleware auth, or debug tough DSA logic in VS Code.",
-    whatToAvoid: "Multitasking or checking notifications.",
+      "Office deep work, code execution, or listening to technical audio lectures during transit.",
+    whatToAvoid: "Instagram scrolling, casual office distractions, or checking phone.",
   },
   {
     id: "midday_dip",
     name: "Mid-Day Post-Lunch Slump (2 PM Window)",
-    timeRange: "1:00 PM – 3:30 PM",
+    timeRange: "1:00 PM – 4:00 PM",
     startHour: 13,
-    endHour: 15.5,
+    endHour: 16,
     energyLevel: "Low Cognitive Stamina (Post-Prandial Dip)",
     energyBadge: "bg-amber-100 text-amber-800 border-amber-300",
     icon: "fa-mug-hot",
     theme: "amber",
-    bestTrack: "gov",
-    trackTitle: "🏛️ Government Exam: GK / Current Affairs / Polity Story Lecture",
+    bestTrack: "genai",
+    trackTitle: "🤖 GenAI Conceptual Architecture & Visual Flows",
     secondaryTrackTitle: "💡 Or: 30-Sec Analogies in Anti-Boredom Vault",
     durationMins: 25,
     neuroScience:
-      "Circadian dip in body temperature + insulin digestion curve. Working memory is low. Attempting heavy coding or complex math here causes intense laziness and burnout! But story-based narrative (History, Polity, GK) requires 60% less brain strain and is effortless to absorb.",
+      "Circadian dip in body temperature + insulin digestion curve. Working memory is low. Attempting heavy coding here causes friction. But conceptual GenAI architecture diagrams, prompt evaluation, and real-world analogies are effortless to absorb.",
     recommendedActivity:
-      "Watch a 20-30 min video on Indian Polity / Current Affairs (70-80% easy completion) or review 3 real-world analogies in the Anti-Boredom Vault. Zero heavy coding!",
-    whatToAvoid: "Complex algorithmic debugging or long textbook note-taking.",
+      "Review GenAI Agent workflows, inspect vector DB embeddings, or read 3 analogies in the Anti-Boredom Vault. Zero heavy debugging!",
+    whatToAvoid: "Mindless Instagram scrolling or opening reels out of afternoon boredom.",
   },
   {
     id: "afternoon_rebound",
@@ -72,54 +72,54 @@ export const CHRONO_PHASES = [
     icon: "fa-code",
     theme: "cyan",
     bestTrack: "mern",
-    trackTitle: "💻 MERN UI & Feature Building / Quick Practice",
-    secondaryTrackTitle: "🏛️ Or: 20-Question Speed Drill",
+    trackTitle: "💻 MERN Production Features & Code Execution",
+    secondaryTrackTitle: "🤖 Or: AI Agent Tool Calling Integration",
     durationMins: 45,
     neuroScience:
-      "Body temperature and alertness rebound. Brain shifts into practical execution and visual synthesis. Great for coding tangible UI screens where you see immediate visual feedback.",
+      "Body temperature and alertness rebound. Brain shifts into practical execution and visual synthesis. Great for building tangible UI screens or wiring API endpoints.",
     recommendedActivity:
-      "Build React UI components, style CSS/Tailwind, test API routes in Postman, or solve 15 speed aptitude questions.",
+      "Build React UI components, style layouts, test API routes in Postman, or write agent tool definitions.",
     whatToAvoid: "Heavy theoretical reading without writing code.",
   },
   {
     id: "evening_mastery",
-    name: "Evening Mastery & Live Sprint",
+    name: "Evening Mastery & GenAI Deep Block",
     timeRange: "7:00 PM – 9:30 PM",
     startHour: 19,
     endHour: 21.5,
-    energyLevel: "Interactive & Structured Focus",
+    energyLevel: "High-Focus Technical Innovation",
     energyBadge: "bg-purple-100 text-purple-800 border-purple-300",
-    icon: "fa-video",
+    icon: "fa-brain",
     theme: "purple",
-    bestTrack: "both",
-    trackTitle: "💻 MERN Live Class / Machine Coding Round",
-    secondaryTrackTitle: "🏛️ And: 30-Min Daily Current Affairs Revision",
+    bestTrack: "genai",
+    trackTitle: "🤖 Generative AI, RAG Pipelines & AI Agents",
+    secondaryTrackTitle: "🚶 Following 6:30 PM Walk & Healthy Dinner",
     durationMins: 60,
     neuroScience:
-      "High capacity for structured external inputs and interactive discussion (live lectures, peer mocks, or guided problem solving).",
+      "High capacity for building next-generation AI architectures: LLM orchestration, LangChain/CrewAI agentic loops, vector retrieval, and prompt engineering.",
     recommendedActivity:
-      "Attend live tech class, do a machine coding drill, or review today's GK notes with high-intensity focus.",
-    whatToAvoid: "Unstructured multitasking.",
+      "Implement autonomous agent loops (ReAct pattern), integrate Pinecone/Chroma vector DBs, or benchmark prompt outputs (8:00 PM – 9:30 PM).",
+    whatToAvoid: "Checking social media or letting mobile screen time creep past 30 mins.",
   },
   {
     id: "night_consolidation",
-    name: "Night Memory Consolidation",
-    timeRange: "10:00 PM – 11:30 PM",
-    startHour: 22,
+    name: "Night Digital Sunset & Memory Storage",
+    timeRange: "9:30 PM – 10:30 PM",
+    startHour: 21.5,
     endHour: 24,
     energyLevel: "Wind-Down & Neuroplastic Memory Storage",
     energyBadge: "bg-indigo-100 text-indigo-950 border-indigo-300",
     icon: "fa-moon",
     theme: "indigo",
     bestTrack: "both",
-    trackTitle: "📖 30-Min Book Reading (Mindset & Self-Discipline)",
-    secondaryTrackTitle: "⚡ Plus: 5-Min Review of Today's Ticked Topics",
+    trackTitle: "📵 Digital Sunset (Phone Locked Away) & 📖 Book Reading",
+    secondaryTrackTitle: "😴 Lights Out by 10:30 PM for 6.0h Restorative Sleep",
     durationMins: 30,
     neuroScience:
-      "Melatonin onset. Your hippocampus prepares to consolidate today's learnings into long-term memory during sleep. Reading high-wisdom books primes a calm, focused mindset for tomorrow.",
+      "Melatonin onset. Your hippocampus transfers today's MERN code and GenAI architecture into neocortex long-term memory during deep sleep. Zero blue light protects sleep spindle density.",
     recommendedActivity:
-      "Read 15-20 pages of a recommended book (Atomic Habits / Deep Work / Stoicism) and mentally review 2 concepts you ticked today.",
-    whatToAvoid: "Blue-light screens, debugging code in bed, or stressful news.",
+      "Lock phone inside drawer (9:30 PM), read 15-20 pages of book (Atomic Habits / Deep Work), and sleep by 10:30 PM to wake refreshed at 4:30 AM.",
+    whatToAvoid: "Blue-light screens, phone scrolling in bed, or studying past 10:30 PM.",
   },
 ];
 
@@ -127,12 +127,12 @@ export function getCurrentChronoPhase() {
   const now = new Date();
   const currentHour = now.getHours() + now.getMinutes() / 60;
 
-  if (currentHour >= 6 && currentHour < 9.5) return CHRONO_PHASES[0]; // Dawn
-  if (currentHour >= 9.5 && currentHour < 13) return CHRONO_PHASES[1]; // Morning Peak
+  if (currentHour >= 4.5 && currentHour < 8.5) return CHRONO_PHASES[0]; // Dawn
+  if (currentHour >= 8.5 && currentHour < 13) return CHRONO_PHASES[1]; // Morning Peak
   if (currentHour >= 13 && currentHour < 16) return CHRONO_PHASES[2]; // Midday Dip (2 PM)
   if (currentHour >= 16 && currentHour < 19) return CHRONO_PHASES[3]; // Afternoon Rebound
-  if (currentHour >= 19 && currentHour < 22) return CHRONO_PHASES[4]; // Evening Mastery
-  return CHRONO_PHASES[5]; // Night Consolidation (10 PM - 6 AM)
+  if (currentHour >= 19 && currentHour < 21.5) return CHRONO_PHASES[4]; // Evening Mastery
+  return CHRONO_PHASES[5]; // Night Consolidation (9:30 PM - 4:30 AM)
 }
 
 export default function ChronoAdvisor({ onSelectTrack, onOpenVault, onOpenBedtimeSummary }) {
@@ -205,16 +205,16 @@ export default function ChronoAdvisor({ onSelectTrack, onOpenVault, onOpenBedtim
           className="self-start sm:self-auto px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-indigo-100 text-xs font-bold transition-all flex items-center gap-1.5 border border-white/10 cursor-pointer"
         >
           <i className="fa-solid fa-circle-question text-amber-300 text-[11px]"></i>
-          <span>{showScienceDetails ? "Hide Why This Works" : "Why 2 PM is Easy for Govt?"}</span>
+          <span>{showScienceDetails ? "Hide Why This Works" : "Why Midday Fits GenAI Concepts?"}</span>
         </button>
       </div>
 
-      {/* ── Collapsible Scientific Breakdown (Explains why 2PM is easy for Govt vs MERN) ── */}
+      {/* ── Collapsible Scientific Breakdown (Explains why midday fits GenAI vs MERN) ── */}
       {showScienceDetails && (
         <div className="bg-white/10 border border-white/15 rounded-xl p-4 text-xs text-indigo-100 space-y-2.5 animate-fadeIn">
           <div className="font-bold text-white flex items-center gap-2 text-xs sm:text-sm">
             <i className="fa-solid fa-brain text-amber-300"></i>
-            <span>The Science of Daily Brain Energy: Why MERN vs Govt Timing Matters</span>
+            <span>The Science of Daily Brain Energy: Why MERN vs GenAI Timing Matters</span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
             <div className="bg-black/20 p-3 rounded-lg border border-white/10 space-y-1">
@@ -222,9 +222,9 @@ export default function ChronoAdvisor({ onSelectTrack, onOpenVault, onOpenBedtim
                 <i className="fa-solid fa-sun"></i> 🥪 The 1:00 PM – 3:30 PM (Mid-Day) Rule:
               </div>
               <p className="leading-relaxed text-indigo-100/90 text-[11px]">
-                After lunch, your body enters a natural <strong>post-prandial temperature dip</strong>. Working memory drops. If you try to write complex MERN code or debug errors, your brain gets overwhelmed and gives you the <em>"lazy/quit"</em> signal.
+                After lunch, your body enters a natural <strong>post-prandial temperature dip</strong>. Working memory drops. If you try to write raw complex MERN code or debug errors, your brain gets overwhelmed and gives you the <em>"lazy/quit"</em> signal.
                 <br />
-                <strong>The Solution:</strong> Switch to <strong>Government Exam videos (GK, History, Polity, English)</strong>! Story-driven narratives require 60% less mental energy, so you effortlessly finish 70-80% of the lecture without feeling lazy.
+                <strong>The Solution:</strong> Switch to <strong>Generative AI architecture breakdowns, Prompt Engineering & Agent design videos</strong>! High-level conceptual diagrams require 60% less working memory than intense syntax debugging, allowing you to absorb state-of-the-art AI systems effortlessly.
               </p>
             </div>
 

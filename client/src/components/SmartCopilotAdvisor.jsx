@@ -35,9 +35,14 @@ export const QUICK_PROMPTS = [
     query: "I missed my morning study slot today, how do I recover my schedule and keep my streak alive?",
   },
   {
+    id: "instagram_craving",
+    label: "📵 Urge to scroll Instagram Reels",
+    query: "I have a strong urge to open Instagram reels and check my phone, how do I stop right now?",
+  },
+  {
     id: "track_balance",
-    label: "⚖️ MERN vs Govt track balance",
-    query: "Am I balancing MERN DSA and Govt Exam prep properly today? What should I prioritize right now?",
+    label: "⚖️ MERN vs GenAI track balance",
+    query: "Am I balancing MERN DSA and GenAI Agent prep properly today? What should I prioritize right now?",
   },
   {
     id: "too_lazy",
@@ -247,7 +252,7 @@ export default function SmartCopilotAdvisor({
           why: `It is currently ${liveClock} (${timeOfDay}). 90 minutes is the scientifically optimal duration for a full sleep cycle. Your brain will pass through Light Sleep (Stages 1 & 2) ➔ Deep Slow-Wave Sleep (Stage 3) ➔ REM Sleep (Stage 4). Because you wake up as the REM cycle completes at ${wakeTimeStr}, you bypass the heavy sleep inertia that happens with 60-min naps. You will have ~${hoursLeftStr} of clear-headed focus time before your 12:30 AM bedtime target!`,
           actionPlan: [
             `⏱️ Step 1 (${liveClock} – ${wakeTimeStr}): Sleep for 90 minutes. Set the 90m timer below with soothing Rain / Brown Noise audio. Sleep in complete darkness.`,
-            `💧 Step 2 (${wakeTimeStr} – ${step2EndStr}): Upon waking at ${wakeTimeStr}: Drink 200ml cold water + 2m stretch to flush adenosine. Then do a 45-min sprint (Striver DSA logic or Govt Current Affairs).`,
+            `💧 Step 2 (${wakeTimeStr} – ${step2EndStr}): Upon waking at ${wakeTimeStr}: Drink 200ml cold water + 2m stretch to flush adenosine. Then do a 45-min sprint (Striver DSA logic or GenAI Architecture).`,
             `📖 Step 3 (${step2EndStr} – 12:30 AM): Read 20-30 mins of your book (*Atomic Habits / Deep Work*) & complete Bedtime Review. Note: Since you already banked 1.5h of deep sleep tonight, your night recovery is ahead of schedule!`,
           ],
           actions: [
@@ -268,9 +273,9 @@ export default function SmartCopilotAdvisor({
               track: "mern",
             },
             {
-              label: "🏛️ Open Govt Exam Tracker",
+              label: "🤖 Open GenAI Agents Tracker",
               type: "select_track",
-              track: "gov",
+              track: "genai",
             },
           ],
         };
@@ -333,7 +338,7 @@ export default function SmartCopilotAdvisor({
           actionPlan: [
             `⏱️ Step 1 (${liveClock} – ${wakeTimeStr}): Start the 25-minute nap timer with gentle Rain audio.`,
             `💧 Step 2 (${wakeTimeStr}): Stand up immediately upon timer chime, drink a glass of water, and jump straight into study.`,
-            `💻 Step 3: Complete a 45-minute deep focus MERN or Govt sprint.`,
+            `💻 Step 3: Complete a 45-minute deep focus MERN or GenAI sprint.`,
           ],
           actions: [
             {
@@ -409,7 +414,7 @@ export default function SmartCopilotAdvisor({
         verdict: `High-Yield Action (${crunchMins} Mins Window): Do NOT start heavy architecture. Execute a ${crunchMins}-Min Rapid-Fire Drill or 1 DSA Logic Problem.`,
         why: `At ${liveClock} (${timeOfDay}), starting a complex multi-hour coding task in a ${crunchMins}-min window creates cognitive context-switching penalties. Instead, a targeted sprint until ${endMinsStr} gives an instant dopamine win and strengthens active recall without leaving unfinished threads.`,
         actionPlan: [
-          `🥊 Step 1: Launch the 60-Second Rapid-Fire Drill to test MERN concepts or Govt Quant shortcuts.`,
+          `🥊 Step 1: Launch the 60-Second Rapid-Fire Drill to test MERN concepts or GenAI architecture.`,
           `💻 Step 2: Or pick exactly 1 DSA problem from Striver Step 1/3 and write just the brute-force & optimal logic before ${endMinsStr}.`,
           `✅ Step 3: Click 'Log 15m Sprint' to automatically mark topic progress and preserve your streak.`,
         ],
@@ -429,9 +434,9 @@ export default function SmartCopilotAdvisor({
             type: "open_rescue",
           },
           {
-            label: "🏛️ Jump to Govt Speed Math",
+            label: "🤖 Jump to GenAI Agents",
             type: "select_track",
-            track: "gov",
+            track: "genai",
           },
         ],
       };
@@ -453,12 +458,12 @@ export default function SmartCopilotAdvisor({
         badge: "🧠 Cognitive Load Rebalancing",
         badgeColor: "bg-rose-400/20 text-rose-300 border-rose-400/40",
         verdict:
-          "Cognitive Pivot: Cease Heavy Algorithmic Debugging. Switch to Narrative Story Learning (Polity/GK) or Anti-Boredom Vault.",
-        why: `It is ${liveClock} (${timeOfDay}). Heavy coding & abstract math consume prefrontal glucose rapidly. When working memory buffers overflow, forcing more code leads to frustration and self-doubt. Switching to narrative learning (Indian History, Polity, or visual mental models) uses visual-auditory temporal pathways, requiring 60% less mental strain while keeping study progress moving.`,
+          "Cognitive Pivot: Cease Heavy Algorithmic Debugging. Switch to Visual GenAI Workflows or Anti-Boredom Vault.",
+        why: `It is ${liveClock} (${timeOfDay}). Heavy coding & abstract math consume prefrontal glucose rapidly. When working memory buffers overflow, forcing more code leads to frustration. Switching to visual mental models or inspecting agentic diagrams in the Anti-Boredom Vault uses visual-auditory temporal pathways, requiring 60% less mental strain while keeping momentum alive.`,
         actionPlan: [
           "💡 Step 1: Open the Anti-Boredom Vault to review 3 memorable real-world mental models (e.g. Event Loop = Restaurant Kitchen).",
-          "🏛️ Step 2: Watch a 20-min story-based Indian Polity or Current Affairs lecture with zero note-taking pressure.",
-          "☕ Step 3: Take a 10-min tea/walk break with 40Hz brown noise to reset neural firing.",
+          "🤖 Step 2: Review high-level GenAI architecture diagrams with zero coding pressure.",
+          "☕ Step 3: Take a 10-min walk/stretch break with 40Hz brown noise to reset neural firing.",
         ],
         actions: [
           {
@@ -466,9 +471,9 @@ export default function SmartCopilotAdvisor({
             type: "open_vault",
           },
           {
-            label: "🏛️ Switch to Govt / Polity Story",
+            label: "🤖 Switch to GenAI Track",
             type: "select_track",
-            track: "gov",
+            track: "genai",
           },
           {
             label: "⏱️ Start 15m Reset Timer",
@@ -496,8 +501,8 @@ export default function SmartCopilotAdvisor({
         badge: "⚡ Emergency Schedule Compression",
         badgeColor: "bg-indigo-400/20 text-indigo-300 border-indigo-400/40",
         verdict:
-          "Recovery Strategy: Do not cram 6 missed hours into the night. Execute 1 Anchor MERN Sprint + 1 Govt Mock Sprint.",
-        why: "Trying to make up for missed morning hours by studying until 3:00 AM destroys tomorrow's circadian cortisol rhythm and creates a multi-day burnout spiral. Instead, execute the '2-Anchor Rule': complete your #1 high-yield DSA topic + 1 Govt mock, and protect your 12:30 AM bedtime.",
+          "Recovery Strategy: Do not cram 6 missed hours into the night. Execute 1 Anchor MERN Sprint + 1 GenAI Architecture Sprint.",
+        why: "Trying to make up for missed morning hours by studying until 2:00 AM destroys tomorrow's circadian cortisol rhythm and creates a multi-day burnout spiral. Instead, execute the '2-Anchor Rule': complete your #1 high-yield DSA topic + 1 GenAI agent architecture block, and protect your 10:30 PM bedtime.",
         actionPlan: [
           "🎯 Step 1: Define today's single most critical topic in the 'Today's #1 Mission' banner.",
           "⏱️ Step 2: Complete a 45-minute focused MERN deep work session right now.",
@@ -522,12 +527,56 @@ export default function SmartCopilotAdvisor({
       };
     }
 
-    // 5. MERN VS GOVT TRACK BALANCE
+    // 4.5. INSTAGRAM & MOBILE SCREEN TIME URGE (DIGITAL DETOX)
+    if (
+      q.includes("instagram") ||
+      q.includes("reels") ||
+      q.includes("scroll") ||
+      q.includes("screen") ||
+      q.includes("phone urge") ||
+      q.includes("distract")
+    ) {
+      return {
+        query: rawQuery,
+        category: "digital_detox",
+        badge: "📵 Screen Detox & Urge Surfing Guard",
+        badgeColor: "bg-emerald-400/20 text-emerald-300 border-emerald-400/40",
+        verdict:
+          "Screen Defense Protocol: Lock Phone in Drawer Now + 60s Urge Surfing. Target: < 30 Mins Daily!",
+        why: "Instagram Reels flood your brain's mesolimbic dopamine pathway with random micro-rewards every 7 seconds, inducing chronic receptor down-regulation and brain fog. Urges peak and subside within 90 seconds if you do not feed the stimulus.",
+        actionPlan: [
+          "🚪 Step 1: Physical Friction — Put your phone face-down inside your desk drawer or in another room right now.",
+          "🌊 Step 2: 60-Second Urge Surfing — Take 5 deep belly breaths (4s inhale, 7s hold, 8s exhale). Notice the craving sensation as a wave passing over you.",
+          "💻 Step 3: Dopamine Swap — Open VS Code or Striver DSA and solve 1 quick problem. Replace cheap social dopamine with authentic high-competence dopamine.",
+        ],
+        actions: [
+          {
+            label: "🔒 45-Min Phone Locker Timer",
+            type: "start_timer",
+            mins: 45,
+            sound: "brown",
+          },
+          {
+            label: "💻 Open Striver DSA",
+            type: "select_track",
+            track: "mern",
+          },
+          {
+            label: "🤖 Open GenAI Agents",
+            type: "select_track",
+            track: "genai",
+          },
+        ],
+      };
+    }
+
+    // 5. MERN VS GENAI TRACK BALANCE
     if (
       q.includes("balance") ||
       q.includes("which track") ||
       q.includes("what to study") ||
       q.includes("prioritize") ||
+      q.includes("mern or genai") ||
       q.includes("mern or gov") ||
       q.includes("split") ||
       q.includes("priority")
@@ -540,22 +589,22 @@ export default function SmartCopilotAdvisor({
         badgeColor: "bg-purple-400/20 text-purple-300 border-purple-400/40",
         verdict: shouldDoMern
           ? `Track Priority: Focus on MERN & DSA (Logged: ${mernMinsLogged}m today, Target: 120m+)`
-          : `Track Priority: Shift focus to Govt Exam & Current Affairs (MERN already has ${mernMinsLogged}m logged!)`,
+          : `Track Priority: Shift focus to GenAI & AI Agents (MERN already has ${mernMinsLogged}m logged!)`,
         why: shouldDoMern
           ? `Your MERN & Striver DSA track is currently behind today's target (${mernMinsLogged} mins logged). MERN algorithmic muscle memory requires daily code writing to build neural fluency for technical interviews.`
-          : `You have made great progress on MERN (${mernMinsLogged} mins logged). Balancing both tracks requires dedicating the next window to Quantitative Aptitude, Reasoning, or GS Revision to maintain dual competitiveness.`,
+          : `You have made great progress on MERN (${mernMinsLogged} mins logged). Dedicate the next window to Generative AI architectures, RAG embeddings, or autonomous tool calling loops to build production AI systems.`,
         actionPlan: [
           shouldDoMern
             ? "💻 Step 1: Open MERN Tracker and solve 1 pending problem from Striver A2Z DSA."
-            : "🏛️ Step 1: Open Govt Exam Tracker and solve 25 Aptitude questions or 1 mock section.",
+            : "🤖 Step 1: Open GenAI Tracker and implement 1 RAG or AI Agent module.",
           "⏱️ Step 2: Run a 45-minute deep focus session with 40Hz Gamma soundscape.",
           "✅ Step 3: Auto-tick the topic in the tracker to update your momentum score.",
         ],
         actions: [
           {
-            label: shouldDoMern ? "💻 Go to MERN Roadmap" : "🏛️ Go to Govt Tracker",
+            label: shouldDoMern ? "💻 Go to MERN Roadmap" : "🤖 Go to GenAI Tracker",
             type: "select_track",
-            track: shouldDoMern ? "mern" : "gov",
+            track: shouldDoMern ? "mern" : "genai",
           },
           {
             label: "⏱️ Start 45m Focus Timer",
@@ -625,12 +674,12 @@ export default function SmartCopilotAdvisor({
         badge: "🌙 Circadian Memory Consolidation",
         badgeColor: "bg-indigo-400/20 text-indigo-300 border-indigo-400/40",
         verdict:
-          "Sleep Verdict: Stop Screen-Based Coding. Read 15 mins of a book & protect your 12:30 AM sleep target.",
-        why: "Studying code past 11:30 PM with blue-light exposure delays melatonin release by 90 minutes and cuts REM sleep. REM sleep is when your brain transfers today's DSA algorithms and Govt formulas from short-term hippocampus into long-term neocortex memory. Sacrificing sleep destroys tomorrow's retention by up to 40%.",
+          "Sleep Verdict: Stop Screen-Based Coding. Read 15 mins of a book & protect your 10:30 PM sleep target.",
+        why: "Studying code past 10:00 PM with blue-light exposure delays melatonin release by 90 minutes and cuts REM sleep. REM sleep is when your brain transfers today's DSA algorithms and GenAI architectures from short-term hippocampus into long-term neocortex memory. Sacrificing sleep destroys tomorrow's retention by up to 40%.",
         actionPlan: [
           "📖 Step 1: Open the Bedtime Review to log today's total output and commit tomorrow's #1 target.",
           "📚 Step 2: Read 15-20 pages of a wisdom book (Atomic Habits / Deep Work).",
-          "🛏️ Step 3: Complete wind-down and be in bed by 12:30 AM for your 5.5-hour sleep target.",
+          "🛏️ Step 3: Complete wind-down and be in bed by 10:30 PM for your 6.0-hour sleep target (4:30 AM wake).",
         ],
         actions: [
           {
@@ -659,18 +708,18 @@ export default function SmartCopilotAdvisor({
         badge: "🥪 Circadian Post-Prandial Strategy",
         badgeColor: "bg-amber-400/20 text-amber-300 border-amber-400/40",
         verdict:
-          "Midday Strategy: Switch to Government Exam Story Lectures (Polity/GK). Avoid Heavy MERN Debugging!",
-        why: "After lunch, digestion causes a natural circadian dip in core body temperature and working memory. Heavy coding feels exhausting right now. But narrative-based subjects like Indian History, Polity, and Current Affairs require minimal mental strain and are 2x easier to absorb during this window.",
+          "Midday Strategy: Switch to GenAI Visual Workflows & Concept Docs. Avoid Heavy Algorithmic Debugging!",
+        why: "After lunch, digestion causes a natural circadian dip in core body temperature and working memory. Heavy coding feels exhausting right now. But conceptual GenAI architecture diagrams, prompt evaluation, and real-world analogies in the Mental Vault require minimal mental strain and are 2x easier to absorb.",
         actionPlan: [
-          "🏛️ Step 1: Watch a 25-minute Indian Polity or Current Affairs lecture video.",
+          "🤖 Step 1: Review a 20-minute video or doc on RAG architectures / Vector search.",
           "💡 Step 2: Explore 2 analogies in the Anti-Boredom Vault.",
-          "💻 Step 3: Save MERN architecture and complex coding for the 4:00 PM Afternoon Rebound.",
+          "💻 Step 3: Save deep MERN debugging for the 4:00 PM Afternoon Rebound.",
         ],
         actions: [
           {
-            label: "🏛️ Switch to Govt Exam Track",
+            label: "🤖 Switch to GenAI Track",
             type: "select_track",
-            track: "gov",
+            track: "genai",
           },
           {
             label: "⏱️ Start 25m Story Video Timer",
@@ -701,9 +750,9 @@ export default function SmartCopilotAdvisor({
       ],
       actions: [
         {
-          label: `💻 Switch to ${livePhase.bestTrack === "gov" ? "Govt Exam" : "MERN Track"}`,
+          label: `💻 Switch to ${livePhase.bestTrack === "genai" ? "GenAI Track" : "MERN Track"}`,
           type: "select_track",
-          track: livePhase.bestTrack === "gov" ? "gov" : "mern",
+          track: livePhase.bestTrack === "genai" ? "genai" : "mern",
         },
         {
           label: `⏱️ Start ${livePhase.durationMins}m Focus Timer`,

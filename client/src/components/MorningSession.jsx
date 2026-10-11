@@ -337,12 +337,11 @@ export default function MorningSession({
                 Morning Session & Cardio Routine
               </h2>
               <span className="text-[10px] font-black tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
-                4:30 AM – 7:40 AM+ Protocol
+                5:00 AM – 8:30 AM Protocol
               </span>
             </div>
             <p className="text-xs text-bark-muted mt-0.5">
-              Structured awakening • 145 mins peak study • 30-min Belly & Chest
-              cardio • Hydration mastery
+              5:00 AM Awakening • 5:30 AM – 6:30 AM Outdoor Running Outside Home • Shower & Pooja • 70-min Striver DSA Prime Focus
             </p>
           </div>
         </div>
@@ -366,7 +365,7 @@ export default function MorningSession({
             className="px-3 py-1.5 bg-gradient-to-r from-terra to-orange-600 hover:from-terra-dark hover:to-orange-700 text-white text-xs font-black rounded-lg flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
           >
             <i className="fa-solid fa-stopwatch"></i>
-            <span>Start 30m Cardio</span>
+            <span>Start Outdoor Run Timer</span>
           </button>
 
           <button
@@ -408,8 +407,8 @@ export default function MorningSession({
                   : "bg-cream/60 text-bark-muted hover:text-bark hover:bg-cream"
               }`}
             >
-              <span>🏃‍♂️ 30-Min Cardio Exercises</span>
-              <span className="text-[10px] opacity-80">Actions & Emojis</span>
+              <span>🏃‍♂️ Outdoor Running Cardio</span>
+              <span className="text-[10px] opacity-80">5:30 AM Outside</span>
             </button>
 
             <button

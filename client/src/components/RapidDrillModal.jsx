@@ -44,48 +44,68 @@ const MERN_DRILLS = [
   },
 ];
 
-const GOV_DRILLS = [
+const GENAI_DRILLS = [
   {
-    q: "What is the fast mental shortcut to compute 85²?",
-    options: ["7225 (8 × 9 = 72, followed by 25)", "7025", "6825", "7425"],
-    answer: 0,
-    explanation: "For numbers ending in 5: Multiply the first digit by (digit + 1), then append 25. 8 × 9 = 72 ➔ 7225.",
-  },
-  {
-    q: "What is the fraction equivalent of 37.5%?",
-    options: ["3/8", "5/8", "3/7", "7/16"],
-    answer: 0,
-    explanation: "12.5% = 1/8 ➔ 37.5% = 3 × (1/8) = 3/8.",
-  },
-  {
-    q: "Which Article of the Indian Constitution is known as the 'Heart and Soul' of the Constitution according to Dr. B.R. Ambedkar?",
-    options: ["Article 21 (Right to Life)", "Article 32 (Right to Constitutional Remedies)", "Article 14 (Equality before Law)", "Article 19 (Freedom of Speech)"],
+    q: "In RAG (Retrieval-Augmented Generation), what is the primary role of a Vector Database?",
+    options: [
+      "Executing JavaScript code loops",
+      "Storing and indexing high-dimensional embeddings for nearest-neighbor similarity search (e.g. Cosine, Euclidean)",
+      "Serving CSS stylesheets to the client",
+      "Compiling Python bytecode to machine code",
+    ],
     answer: 1,
-    explanation: "Article 32 empowers citizens to move the Supreme Court directly for the enforcement of Fundamental Rights via writs.",
+    explanation: "Vector DBs (Pinecone, Qdrant, Chroma, Milvus) index mathematical vector embeddings to quickly find semantically similar text chunks via cosine similarity or dot product.",
   },
   {
-    q: "If 12 men can complete a piece of work in 10 days, how many men are needed to complete it in 6 days?",
-    options: ["18 men", "20 men", "24 men", "15 men"],
+    q: "What design pattern powers Autonomous AI Agents that iterate through Thought ➔ Action ➔ Observation loops?",
+    options: ["Singleton Pattern", "Observer Pattern", "ReAct (Reasoning + Acting) Pattern", "Factory Pattern"],
+    answer: 2,
+    explanation: "The ReAct pattern alternates between step-by-step reasoning ('Thought') and executing environment tools ('Action'), observing outputs until arriving at the final response.",
+  },
+  {
+    q: "What does 'Temperature' parameter control during LLM inference?",
+    options: [
+      "The physical GPU hardware temperature",
+      "The randomness and entropy of token probability distribution (0 = deterministic, 1 = creative/diverse)",
+      "The maximum token generation limit",
+      "The network latency of API requests",
+    ],
     answer: 1,
-    explanation: "M1 × D1 = M2 × D2 ➔ 12 × 10 = M2 × 6 ➔ 120 / 6 = 20 men.",
+    explanation: "Temperature scales the logits prior to softmax. Lower temperature (0.0 - 0.2) makes predictions focused and deterministic; higher temperature increases output variance.",
   },
   {
-    q: "Fundamental Duties (Article 51A) were added to the Indian Constitution by which Amendment Act?",
-    options: ["42nd Amendment Act (1976)", "44th Amendment Act (1978)", "73rd Amendment Act (1992)", "86th Amendment Act (2002)"],
-    answer: 0,
-    explanation: "The 42nd Constitutional Amendment Act, 1976 added Part IV-A (Article 51A) based on the recommendations of the Swaran Singh Committee.",
+    q: "When building an Agent with Tool Calling / Function Calling, how does the LLM invoke the tool?",
+    options: [
+      "It directly executes shell commands on the server hardware without permissions",
+      "It outputs a structured JSON schema specifying function name and arguments, and client code executes it",
+      "It modifies the application database directly via SQL injection",
+      "It renders an iframe inside the browser",
+    ],
+    answer: 1,
+    explanation: "LLMs don't execute external code directly; they generate structured JSON arguments conforming to provided tool schemas, which the host runtime executes and returns observations to the model.",
+  },
+  {
+    q: "In RAG pipelines, what is 'HyDE' (Hypothetical Document Embeddings)?",
+    options: [
+      "A compression algorithm for image files",
+      "Generating a hypothetical answer with an LLM first, embedding that answer, and retrieving real documents matching it",
+      "Encrypting embeddings with AES-256",
+      "A database indexing format for relational tables",
+    ],
+    answer: 1,
+    explanation: "HyDE asks an LLM to generate a speculative answer to the user query, and uses the vector embedding of that answer to search the vector space, bridging the gap between question and document phrasing.",
   },
 ];
 
 export default function RapidDrillModal({ isOpen, onClose }) {
-  const [track, setTrack] = useState("mern"); // 'mern' | 'gov'
+  const [track, setTrack] = useState("mern"); // 'mern' | 'genai'
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [score, setScore] = useState(0);
   const [quizFinished, setQuizFinished] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState(60);
 
-  const questions = track === "mern" ? MERN_DRILLS : GOV_DRILLS;
+  const questions = track === "mern" ? MERN_DRILLS : GENAI_DRILLS;
   const currentQ = questions[currentIndex];
 
   useEffect(() => {
@@ -186,14 +206,14 @@ export default function RapidDrillModal({ isOpen, onClose }) {
             </button>
             <button
               type="button"
-              onClick={() => setTrack("gov")}
+              onClick={() => setTrack("genai")}
               className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                track === "gov"
-                  ? "bg-terra-dark text-white shadow-2xs"
+                track === "genai" || track === "gov"
+                  ? "bg-purple-600 text-white shadow-2xs"
                   : "text-bark-muted hover:text-bark"
               }`}
             >
-              🏛️ Govt Speed Math &amp; GS
+              🤖 GenAI &amp; AI Agents Drills
             </button>
           </div>
         )}

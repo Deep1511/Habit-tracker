@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { COMPLETE_24H_MASTER_SCHEDULE, timeToMins, nowTimeStr } from "../scheduleData";
+import { COMPLETE_24H_MASTER_SCHEDULE, timeToMins, nowTimeStr, getTopicForDay } from "../scheduleData";
 
 export default function MasterSchedule24H({
   todayStr,
@@ -15,6 +15,8 @@ export default function MasterSchedule24H({
     const now = new Date();
     return now.getHours() * 60 + now.getMinutes();
   });
+
+  const todayTopic = useMemo(() => getTopicForDay(todayStr), [todayStr]);
 
   // Update current time every 30 seconds for live active window highlighting
   useEffect(() => {
@@ -155,15 +157,18 @@ export default function MasterSchedule24H({
             <h2 className="font-display font-black text-lg sm:text-xl text-bark tracking-tight">
               The Complete 24-Hour Master Schedule
             </h2>
-            <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs">
-              6 Hours Sleep
+            <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-900 border border-indigo-200 shadow-2xs">
+              MERN Stack & GenAI Focus
             </span>
-            <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-900 border border-indigo-200">
-              SSC CGL Prime Focus
+            <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300">
+              📵 Digital Detox Guard (&lt; 30m)
+            </span>
+            <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
+              6 Hours Sleep
             </span>
           </div>
           <p className="text-xs text-bark-muted max-w-2xl leading-relaxed">
-            High-leverage circadian routine balancing 4.5 hrs of SSC CGL study, fat-burning cardio, 8 hrs of office execution, and exactly 6.0 hours of deep restorative sleep.
+            High-leverage circadian routine balancing 4.0 hrs of MERN & GenAI deep work, fat-burning cardio, 8 hrs of office execution, strict mobile screen-time limits (&lt; 30m), and exactly 6.0 hours of restorative sleep.
           </p>
         </div>
 
@@ -176,7 +181,7 @@ export default function MasterSchedule24H({
               className={`px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition-all cursor-pointer shadow-xs ${
                 isActiveSchedule
                   ? "bg-emerald-600 text-white shadow-emerald-200"
-                  : "bg-amber-500 hover:bg-amber-600 text-white shadow-amber-200"
+                  : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200"
               }`}
               title="Toggle this schedule for the main dashboard timeline"
             >
@@ -216,29 +221,29 @@ export default function MasterSchedule24H({
           <div>
             <div className="text-[10px] uppercase font-bold text-purple-700 tracking-wider">Deep Sleep</div>
             <div className="text-sm font-black text-purple-950">6.0 Hours</div>
-            <div className="text-[10px] text-purple-600">10:30 PM – 4:30 AM</div>
+            <div className="text-[10px] text-purple-600">11:00 PM – 5:00 AM</div>
           </div>
         </div>
 
         <div className="bg-indigo-50/80 border border-indigo-200/80 rounded-xl p-3 flex items-center gap-3">
           <span className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
-            📚
+            💻
           </span>
           <div>
-            <div className="text-[10px] uppercase font-bold text-indigo-700 tracking-wider">SSC CGL Study</div>
-            <div className="text-sm font-black text-indigo-950">4.5+ Hours</div>
-            <div className="text-[10px] text-indigo-600">4 Study Blocks</div>
+            <div className="text-[10px] uppercase font-bold text-indigo-700 tracking-wider">MERN & GenAI</div>
+            <div className="text-sm font-black text-indigo-950">3.5+ Hours</div>
+            <div className="text-[10px] text-indigo-600">DSA + MERN + GenAI</div>
           </div>
         </div>
 
-        <div className="bg-orange-50/80 border border-orange-200/80 rounded-xl p-3 flex items-center gap-3">
-          <span className="w-8 h-8 rounded-lg bg-orange-600 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
+        <div className="bg-emerald-50/80 border border-emerald-200/80 rounded-xl p-3 flex items-center gap-3">
+          <span className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
             🏃‍♂️
           </span>
           <div>
-            <div className="text-[10px] uppercase font-bold text-orange-800 tracking-wider">Cardio & Core</div>
-            <div className="text-sm font-black text-orange-950">30 Mins</div>
-            <div className="text-[10px] text-orange-700">6:30 – 7:00 AM</div>
+            <div className="text-[10px] uppercase font-bold text-emerald-800 tracking-wider">Outdoor Run</div>
+            <div className="text-sm font-black text-emerald-950">60 Mins</div>
+            <div className="text-[10px] text-emerald-700">5:30 – 6:30 AM Outside</div>
           </div>
         </div>
 
@@ -253,14 +258,14 @@ export default function MasterSchedule24H({
           </div>
         </div>
 
-        <div className="bg-amber-50/80 border border-amber-200/80 rounded-xl p-3 flex items-center gap-3 col-span-2 sm:col-span-1">
-          <span className="w-8 h-8 rounded-lg bg-amber-600 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
-            🥛
+        <div className="bg-emerald-50/80 border border-emerald-200/80 rounded-xl p-3 flex items-center gap-3 col-span-2 sm:col-span-1">
+          <span className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
+            📵
           </span>
           <div>
-            <div className="text-[10px] uppercase font-bold text-amber-800 tracking-wider">Target Diet</div>
-            <div className="text-sm font-black text-amber-950">Electrolytes & High-Protein</div>
-            <div className="text-[10px] text-amber-700">Banana + Milk PM</div>
+            <div className="text-[10px] uppercase font-bold text-emerald-800 tracking-wider">Screen Guard</div>
+            <div className="text-sm font-black text-emerald-950">&lt; 30m / Zero Reels</div>
+            <div className="text-[10px] text-emerald-700">9:30 PM Phone Lockout</div>
           </div>
         </div>
       </div>
@@ -433,6 +438,37 @@ export default function MasterSchedule24H({
                   <div className="flex items-start gap-1.5 pt-1 border-t border-cream-deep/40 text-[11px] text-amber-900 font-medium">
                     <span className="text-amber-600 font-extrabold flex-shrink-0">🥗 Diet:</span>
                     <span>{block.dietAction}</span>
+                  </div>
+                )}
+
+                {/* Scheduled Topic Inline Badges */}
+                {todayTopic && (block.key === "morningStudy1" || block.id === "m24_study_session_1_dsa") && (
+                  <div className="pt-1.5 border-t border-indigo-200/80 text-[11px] font-bold text-indigo-900">
+                    <div className="flex items-center gap-1 text-amber-700">
+                      <i className="fa-solid fa-bullseye text-[10px]"></i>
+                      <span>Scheduled DSA:</span>
+                    </div>
+                    <div className="text-indigo-950 font-extrabold">{todayTopic.dsa}</div>
+                  </div>
+                )}
+
+                {todayTopic && (block.key === "mernEvening" || block.id === "m24_study_session_2_mern") && (
+                  <div className="pt-1.5 border-t border-teal-200/80 text-[11px] font-bold text-teal-900">
+                    <div className="flex items-center gap-1 text-teal-700">
+                      <i className="fa-solid fa-code text-[10px]"></i>
+                      <span>Scheduled MERN:</span>
+                    </div>
+                    <div className="text-teal-950 font-extrabold">{todayTopic.mern}</div>
+                  </div>
+                )}
+
+                {todayTopic && (block.key === "genaiSession" || block.id === "m24_study_session_3_genai") && (
+                  <div className="pt-1.5 border-t border-purple-200/80 text-[11px] font-bold text-purple-900">
+                    <div className="flex items-center gap-1 text-purple-700">
+                      <i className="fa-solid fa-video text-[10px]"></i>
+                      <span>Build & Video Mode:</span>
+                    </div>
+                    <div className="text-purple-950 font-extrabold">Build {todayTopic.mern} + Watch Tech/AI Videos</div>
                   </div>
                 )}
               </div>

@@ -17,7 +17,8 @@ export default function TaskDetailModal({ task, dateStr, onClose, onToggle, isDo
 
   // Category types
   const isMernTask = task.cat === "mern";
-  const isGovTask = task.cat === "gov";
+  const isGenaiTask = task.cat === "genai" || task.cat === "gov";
+  const isDetoxTask = task.cat === "detox" || task.key === "screenTimeDetox" || task.key === "digitalDetox";
   const isBrainTask = task.key === "brainFreshup" || task.cat === "brain";
   const isReadingTask = task.key === "reading" || task.cat === "reading";
   const isSleepTask = task.key === "sleepGoal" || task.cat === "sleep";
@@ -105,8 +106,25 @@ export default function TaskDetailModal({ task, dateStr, onClose, onToggle, isDo
                 <div className="text-xs font-bold text-bark">
                   {dayTopic.dsa}
                 </div>
-                <div className="text-[11px] text-bark-muted leading-relaxed bg-white/80 p-2 rounded-lg border border-red-100">
-                  <strong>Key Practice Patterns:</strong> {dayTopic.dsaDesc}
+                <div className="text-[11px] text-bark-muted leading-relaxed bg-white/80 p-2 rounded-lg border border-red-100 space-y-1.5">
+                  <div><strong>Key Practice Patterns:</strong> {dayTopic.dsaDesc}</div>
+                  {dayTopic.coreProblem && (
+                    <div className="pt-1.5 border-t border-red-100 flex items-center gap-1.5 flex-wrap">
+                      <span className="font-black text-red-800 bg-red-100 px-1.5 py-0.5 rounded text-[10px] border border-red-200">
+                        ⭐ Main Target (Just 1 Problem):
+                      </span>
+                      <span className="font-bold text-bark">{dayTopic.coreProblem}</span>
+                    </div>
+                  )}
+                  {dayTopic.optionalProblem && (
+                    <div className="text-[10px] text-bark-muted">
+                      💡 Optional Stretch: {dayTopic.optionalProblem}
+                    </div>
+                  )}
+                  <div className="text-[10px] text-emerald-700 font-semibold flex items-center gap-1 pt-0.5">
+                    <i className="fa-solid fa-circle-check text-[9px]"></i>
+                    <span>Dry-run this 1 problem on notepad with sample testcases = 100% daily success!</span>
+                  </div>
                 </div>
               </div>
 
@@ -179,22 +197,42 @@ export default function TaskDetailModal({ task, dateStr, onClose, onToggle, isDo
             </div>
           )}
 
-          {/* 🏛️ DYNAMIC GOVT EXAM CARD */}
-          {isGovTask && (
-            <div className="bg-gradient-to-br from-terra-pale via-white to-terra-pale/40 border border-terra/30 rounded-xl p-4 space-y-2 shadow-2xs">
+          {/* 🤖 DYNAMIC GENAI & AGENTS CARD */}
+          {isGenaiTask && (
+            <div className="bg-gradient-to-br from-purple-50 via-white to-purple-50/40 border border-purple-200 rounded-xl p-4 space-y-2 shadow-2xs">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-terra-dark flex items-center gap-1.5">
-                  <i className="fa-solid fa-book-bookmark text-terra"></i> Govt Exam Study Focus
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-900 flex items-center gap-1.5">
+                  <i className="fa-solid fa-brain text-purple-600"></i> Generative AI &amp; Autonomous Agents
                 </span>
-                <span className="text-[10px] font-bold text-terra-dark bg-terra-pale px-2 py-0.5 rounded-full border border-terra/20">
-                  High-Scoring Section
+                <span className="text-[10px] font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full border border-purple-200">
+                  Modern AI Stack
                 </span>
               </div>
               <p className="text-[11px] text-bark leading-relaxed">
-                Focus on high-weightage topics: Quantitative Aptitude (Percentages, Ratio, Speed Math), Reasoning patterns, Polity Articles, and Modern Indian History.
+                Focus on modern AI engineering: Vector DBs, Hybrid Retrieval (BM25 + Semantic), Rerankers, ReAct agent loops, Function calling schemas, and LangChain/CrewAI orchestration.
               </p>
-              <div className="bg-white/80 p-2 rounded-lg border border-terra/20 text-[10px] text-bark-muted">
-                💡 <strong>Exam Pro-Tip:</strong> Solve 15 timed questions under countdown pressure and immediately record wrong attempts in your Error Notebook.
+              <div className="bg-white/80 p-2 rounded-lg border border-purple-100 text-[10px] text-bark-muted">
+                💡 <strong>GenAI Pro-Tip:</strong> Always test system prompts for hallucination guardrails and benchmark embedding retrieval precision.
+              </div>
+            </div>
+          )}
+
+          {/* 📵 DYNAMIC DIGITAL DETOX CARD */}
+          {isDetoxTask && (
+            <div className="bg-gradient-to-br from-emerald-50 via-white to-emerald-50/40 border border-emerald-200 rounded-xl p-4 space-y-2 shadow-2xs">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-900 flex items-center gap-1.5">
+                  <i className="fa-solid fa-mobile-screen-button text-emerald-600"></i> Screen Guard &amp; Zero Reels
+                </span>
+                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">
+                  Target: &lt; 30 Mins Daily
+                </span>
+              </div>
+              <p className="text-[11px] text-bark leading-relaxed">
+                Lock your phone face-down inside your desk drawer. Avoid mindless Instagram reel scrolling. Protect your prefrontal dopamine receptors for deep coding.
+              </p>
+              <div className="bg-white/80 p-2 rounded-lg border border-emerald-100 text-[10px] text-bark-muted">
+                🔒 <strong>Iron Rule:</strong> Zero phone in bedroom after 9:30 PM. Complete night digital sunset.
               </div>
             </div>
           )}
@@ -237,14 +275,14 @@ export default function TaskDetailModal({ task, dateStr, onClose, onToggle, isDo
             <div className="bg-gradient-to-br from-mint-pale via-white to-mint-pale/40 border border-mint/30 rounded-xl p-4 space-y-2 shadow-2xs">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-extrabold uppercase tracking-wider text-mint flex items-center gap-1.5">
-                  <i className="fa-solid fa-bed"></i> 5.5 Hours Sleep Protocol
+                  <i className="fa-solid fa-bed"></i> 6.0 Hours Sleep Protocol
                 </span>
                 <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">
-                  Target: 12:30 AM Bedtime
+                  Target: 10:30 PM Bedtime
                 </span>
               </div>
               <p className="text-[11px] text-bark leading-relaxed">
-                Asleep by 12:30 AM to hit your 5.5-hour sleep target and wake up naturally sharp at 6:00 AM. Complete darkness and cool room temperature maximize deep REM memory consolidation.
+                Asleep by 10:30 PM to hit your 6.0-hour sleep target and wake up naturally sharp at 4:30 AM. Complete darkness and cool room temperature maximize deep slow-wave and REM memory consolidation.
               </p>
             </div>
           )}
