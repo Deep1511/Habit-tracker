@@ -69,8 +69,10 @@ export default function App() {
   const tomorrowStr = fmtDate(getTomorrowDate());
   const actualTodayStr = fmtDate(new Date());
 
-  // Default active tracking date to tomorrow since user requested to start from tomorrow and not display today
-  const [activeDateStr, setActiveDateStr] = useState(tomorrowStr);
+  // Default active tracking date to actual today (since 2026-10-12 kickoff is today)
+  const [activeDateStr, setActiveDateStr] = useState(() => {
+    return actualTodayStr >= "2026-10-12" ? actualTodayStr : "2026-10-12";
+  });
   const isTomorrowActive = activeDateStr === tomorrowStr;
 
   const [monthData, setMonthData] = useState(() => {

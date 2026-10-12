@@ -449,6 +449,11 @@ export default function MasterSchedule24H({
                       <span>Scheduled DSA:</span>
                     </div>
                     <div className="text-indigo-950 font-extrabold">{todayTopic.dsa}</div>
+                    {todayTopic.coreProblem && (
+                      <div className="text-[10px] text-indigo-800 mt-0.5">
+                        ⭐ Core Problem: <span className="font-bold">{todayTopic.coreProblem}</span>
+                      </div>
+                    )}
                   </div>
                 )}
 

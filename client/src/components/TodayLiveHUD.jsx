@@ -914,26 +914,59 @@ export default function TodayLiveHUD({
                       {/* Dynamic Topic Badges if Study Block */}
                       {todayTopic && (item.id === "m24_study_session_1_dsa" || item.key === "morningStudy1") && (
                         <div className="mt-2 p-2.5 rounded-xl bg-indigo-50/80 border border-indigo-200 text-xs">
-                          <div className="font-bold text-indigo-950 flex items-center gap-1.5 flex-wrap">
-                            <span className="text-amber-600 font-black">🎯 Scheduled DSA:</span>
-                            <span>{todayTopic.dsa}</span>
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-200/80 text-indigo-800 font-bold">{todayTopic.dsaLevel || "Step by Step"}</span>
-                          </div>
-                          <div className="text-[11px] text-indigo-900 mt-1 flex items-center gap-1.5 flex-wrap">
-                            <span className="font-black text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded text-[10px] border border-amber-200">
-                              ⭐ Core Problem (Just 1):
-                            </span>
-                            <span className="font-bold text-slate-800">
-                              {todayTopic.coreProblem || (todayTopic.dsaProblems && todayTopic.dsaProblems[0])}
-                            </span>
-                            {todayTopic.optionalProblem && (
-                              <span className="text-slate-500 text-[10px]">
-                                (Optional: {todayTopic.optionalProblem})
-                              </span>
+                          <div className="font-bold text-indigo-950 flex items-center justify-between gap-1.5 flex-wrap">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-amber-600 font-black">🎯 Scheduled DSA:</span>
+                              <span>{todayTopic.dsa}</span>
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-200/80 text-indigo-800 font-bold">{todayTopic.dsaLevel || "Step by Step"}</span>
+                            </div>
+                            {onOpenAdaptiveTopic && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onOpenAdaptiveTopic();
+                                }}
+                                className="px-2 py-0.5 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                                title="Click to edit topic or choose Striver Day"
+                              >
+                                <i className="fa-solid fa-pen-to-square text-[9px]"></i>
+                                <span>Edit Topic / Problem</span>
+                              </button>
                             )}
                           </div>
-                          <div className="text-[10px] text-emerald-700 font-semibold mt-1">
-                            ✓ Dry-run on notepad in 45m window — no need to rush multiple problems!
+
+                          <div
+                            onClick={() => onOpenAdaptiveTopic && onOpenAdaptiveTopic()}
+                            className="text-[11px] text-indigo-900 mt-1.5 p-2 rounded-lg bg-white/90 border border-indigo-200/70 hover:border-indigo-400 cursor-pointer transition-all flex items-center justify-between gap-2 flex-wrap group shadow-2xs"
+                            title="Click to edit or change Core Problem"
+                          >
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-black text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded text-[10px] border border-amber-200">
+                                ⭐ Core Problem (Just 1):
+                              </span>
+                              <span className="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                                {todayTopic.coreProblem || (todayTopic.dsaProblems && todayTopic.dsaProblems[0])}
+                              </span>
+                              {todayTopic.optionalProblem && (
+                                <span className="text-slate-500 text-[10px]">
+                                  (Optional: {todayTopic.optionalProblem})
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[10px] font-black text-indigo-600 group-hover:text-indigo-800 flex items-center gap-1">
+                              <i className="fa-solid fa-pen text-[9px]"></i>
+                              <span>Click to Edit</span>
+                            </span>
+                          </div>
+
+                          <div className="text-[10px] text-emerald-700 font-semibold mt-1 flex items-center justify-between gap-2 flex-wrap">
+                            <span>✓ Dry-run on notepad in 45m window — no need to rush multiple problems!</span>
+                            {todayTopic.isCustomLogged && (
+                              <span className="text-[9px] font-black text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded">
+                                Customized ✓
+                              </span>
+                            )}
                           </div>
                         </div>
                       )}
