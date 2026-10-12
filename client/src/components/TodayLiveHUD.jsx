@@ -21,6 +21,7 @@ export default function TodayLiveHUD({
   onOpenNaukri,
   todayTopic,
   onOpenStickyNotes,
+  onOpenAdaptiveTopic,
 }) {
   const [liveDate, setLiveDate] = useState(() => new Date());
   const [filterPhase, setFilterPhase] = useState("all"); // 'all' | 'morning' | 'afternoon' | 'evening' | 'sleep'
@@ -622,14 +623,20 @@ export default function TodayLiveHUD({
             {/* DSA TOPIC BOX */}
             <div className="bg-black/30 border border-indigo-500/30 rounded-2xl p-4 space-y-2 flex flex-col justify-between">
               <div>
-                <div className="flex items-center justify-between gap-2 mb-1.5">
+                <div className="flex items-center justify-between gap-2 mb-1.5 flex-wrap">
                   <span className="text-[11px] font-black uppercase tracking-wider text-indigo-300 flex items-center gap-1.5">
                     <i className="fa-solid fa-brain text-amber-400"></i>
                     <span>DSA Focus (7:15 AM & 2:30 PM Office)</span>
                   </span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-200 border border-indigo-400/30">
-                    {todayTopic.dsaLevel || "Step by Step"}
-                  </span>
+                  {todayTopic.striverFolder ? (
+                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                      📁 Striver: {todayTopic.striverFolder}
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-200 border border-indigo-400/30">
+                      {todayTopic.dsaLevel || "Step by Step"}
+                    </span>
+                  )}
                 </div>
                 <h3 className="text-sm sm:text-base font-black text-white">
                   {todayTopic.dsa}
@@ -664,19 +671,45 @@ export default function TodayLiveHUD({
                   <span>Rule: Dry-run just this 1 problem on paper = 100% daily success!</span>
                 </div>
 
-                {onOpenStickyNotes && (
-                  <div className="pt-1 border-t border-white/10 flex items-center justify-between">
+                {todayTopic.isCustomLogged && (
+                  <div className="p-2 rounded-xl bg-emerald-950/60 border border-emerald-400/40 text-[10px] space-y-1">
+                    <div className="font-extrabold text-emerald-300 flex items-center gap-1.5">
+                      <i className="fa-solid fa-circle-check text-emerald-400"></i>
+                      <span>Custom Progress Logged for Today</span>
+                    </div>
+                    {todayTopic.pushedScheduledToTomorrow && (
+                      <div className="text-amber-300 font-bold">
+                        ⏩ Scheduled topic shifted to tomorrow (+1 Day active)
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="pt-2 border-t border-white/10 flex items-center justify-between gap-2 flex-wrap">
+                  {onOpenAdaptiveTopic && (
+                    <button
+                      type="button"
+                      onClick={onOpenAdaptiveTopic}
+                      className="text-[10px] font-black px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-400/40 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                      title="Log what you actually watched today or push topic to tomorrow"
+                    >
+                      <i className="fa-solid fa-pen-to-square text-amber-300"></i>
+                      <span>{todayTopic.isCustomLogged ? "Edit Today's Study Log" : "📝 Log What I Watched / Push Topic (+1 Day)"}</span>
+                    </button>
+                  )}
+
+                  {onOpenStickyNotes && (
                     <button
                       type="button"
                       onClick={onOpenStickyNotes}
-                      className="text-[10px] font-extrabold text-amber-300 hover:text-amber-200 flex items-center gap-1.5 cursor-pointer transition-colors"
+                      className="text-[10px] font-bold text-slate-300 hover:text-white flex items-center gap-1 cursor-pointer transition-colors"
                       title="View Wall Sticky Notes & Highlighters Guide"
                     >
-                      <span>📌 Wall Sticky Note &amp; Highlighters Studio</span>
+                      <span>📌 Wall Sticky Notes</span>
                       <i className="fa-solid fa-arrow-up-right-from-square text-[8px]"></i>
                     </button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
 

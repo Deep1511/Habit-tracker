@@ -106,6 +106,12 @@ export default function TaskDetailModal({ task, dateStr, onClose, onToggle, isDo
                 <div className="text-xs font-bold text-bark">
                   {dayTopic.dsa}
                 </div>
+                {dayTopic.striverFolder && (
+                  <div className="text-[10px] font-extrabold px-2 py-1 rounded-md bg-red-100 text-red-900 border border-red-200 inline-flex items-center gap-1.5">
+                    <i className="fa-solid fa-folder-open text-red-600"></i>
+                    <span>Striver Sheet Folder: <strong>{dayTopic.striverFolder}</strong></span>
+                  </div>
+                )}
                 <div className="text-[11px] text-bark-muted leading-relaxed bg-white/80 p-2 rounded-lg border border-red-100 space-y-1.5">
                   <div><strong>Key Practice Patterns:</strong> {dayTopic.dsaDesc}</div>
                   {dayTopic.coreProblem && (

@@ -9,6 +9,7 @@ export const CURRICULUM_45_DAYS = {
   1: {
     dayNum: 1,
     dayName: "Day 1 (Monday)",
+    striverFolder: "Beginner Problems > Patterns (Current: 9/22)",
     badge: "JS Fundamentals & DSA Step 1 Basics",
     dsa: "Step 1.1–1.2: Logic Building, Star/Number Patterns & Big-O Notation",
     dsaDesc: "Pyramid, Diamond & Inverted Patterns. Introduction to Time & Space Complexity Big-O analysis (O(1), O(N), O(log N)).",
@@ -29,6 +30,7 @@ export const CURRICULUM_45_DAYS = {
   2: {
     dayNum: 2,
     dayName: "Day 2 (Tuesday)",
+    striverFolder: "Beginner Problems > Basic Maths (0/13)",
     badge: "Basic Math & JS Functions",
     dsa: "Step 1.3: Basic Math Algorithms for DSA Coding",
     dsaDesc: "Count Digits, Reverse a Number, Palindrome Check, GCD/HCF (Euclidean Algorithm in O(log(min(a,b)))), Armstrong Numbers, Check Prime in O(sqrt(N)).",
@@ -49,6 +51,7 @@ export const CURRICULUM_45_DAYS = {
   3: {
     dayNum: 3,
     dayName: "Day 3 (Wednesday)",
+    striverFolder: "Beginner Problems > Basic Recursion (0/12) & Hashing (0/3)",
     badge: "Recursion Basics & Array Methods",
     dsa: "Step 1.4: Basic Recursion & Frequency Hashing",
     dsaDesc: "Recursion mechanics: Base cases, Call stack trace, Print 1 to N, Factorial, Reverse an Array using Two Pointers recursion, Check Palindrome String, Frequency Hash Map.",
@@ -69,6 +72,7 @@ export const CURRICULUM_45_DAYS = {
   4: {
     dayNum: 4,
     dayName: "Day 4 (Thursday)",
+    striverFolder: "Sorting (0/7)",
     badge: "Sorting Algorithms & JS Execution Context",
     dsa: "Step 2: Sorting Techniques (Comparison & Divide-and-Conquer)",
     dsaDesc: "Selection Sort (Find minimum in unsorted array), Bubble Sort (Adjacent swaps), Insertion Sort (Insert in sorted partition), Merge Sort (Divide & Conquer, O(N log N)), Quick Sort (Pivot partitioning).",
@@ -89,6 +93,7 @@ export const CURRICULUM_45_DAYS = {
   5: {
     dayNum: 5,
     dayName: "Day 5 (Friday)",
+    striverFolder: "Arrays (0/32) > Easy Level",
     badge: "Arrays Easy & Closures Mastery",
     dsa: "Step 3.1: Arrays (Easy Level Patterns)",
     dsaDesc: "Largest Element in Array, Second Largest Element without sorting (single pass O(N)), Check if Array is Sorted and Rotated, Remove Duplicates from Sorted Array (Two Pointers in-place).",
@@ -129,6 +134,7 @@ export const CURRICULUM_45_DAYS = {
   7: {
     dayNum: 7,
     dayName: "Day 7 (Sunday)",
+    striverFolder: "Arrays (0/32) > Medium Level",
     badge: "Arrays Medium & 'this' Binding",
     dsa: "Step 3.2: Arrays (Medium: Two Sum & Dutch National Flag)",
     dsaDesc: "Two Sum Problem (Hash Map O(N) vs Two Pointers O(N log N)), Sort an Array of 0s, 1s, and 2s (Dutch National Flag Algorithm with 3 pointers: low, mid, high).",
@@ -189,6 +195,7 @@ export const CURRICULUM_45_DAYS = {
   10: {
     dayNum: 10,
     dayName: "Day 10 (Wednesday)",
+    striverFolder: "Arrays (0/32) > Hard Level",
     badge: "Arrays Hard (3Sum) & Custom Polyfills",
     dsa: "Step 3.3: Arrays (Hard: Pascal's Triangle & 3Sum)",
     dsaDesc: "Pascal's Triangle (Generate row / entire triangle), Majority Element (>N/3 using Extended Moore's Voting), 3Sum Problem (Sort + Fixed element + Two Pointers, avoiding duplicate triplets).",
@@ -249,6 +256,7 @@ export const CURRICULUM_45_DAYS = {
   13: {
     dayNum: 13,
     dayName: "Day 13 (Saturday)",
+    striverFolder: "Binary Search (0/32) > 1D Arrays",
     badge: "Binary Search 1D & Core React Hooks",
     dsa: "Step 4.1: Binary Search on 1D Arrays (Foundations)",
     dsaDesc: "Binary Search algorithm (Iterative & Recursive), Lower Bound (First index >= X), Upper Bound (First index > X), Search Insert Position, Floor and Ceil in Sorted Array.",
@@ -289,6 +297,7 @@ export const CURRICULUM_45_DAYS = {
   15: {
     dayNum: 15,
     dayName: "Day 15 (Monday)",
+    striverFolder: "Binary Search (0/32) > BS on Answers",
     badge: "BS on Answers & React Performance (Memo)",
     dsa: "Step 4.2: Binary Search on Answers (Search Space Monotonicity)",
     dsaDesc: "Finding Square Root using Binary Search, Nth Root of Integer, Koko Eating Bananas (Minimum eating speed within time limit H), Minimum Days to Make M Bouquets.",
@@ -329,6 +338,7 @@ export const CURRICULUM_45_DAYS = {
   17: {
     dayNum: 17,
     dayName: "Day 17 (Wednesday)",
+    striverFolder: "Strings (Basic and Medium) (0/7)",
     badge: "Strings Easy/Med & Context API Architecture",
     dsa: "Step 5.1–5.2: Strings (Easy to Medium Algorithms)",
     dsaDesc: "Remove Outermost Parentheses, Reverse Words in a String, Largest Odd Number in String, Longest Common Prefix, Isomorphic Strings, Valid Anagram.",
@@ -369,6 +379,7 @@ export const CURRICULUM_45_DAYS = {
   19: {
     dayNum: 19,
     dayName: "Day 19 (Friday)",
+    striverFolder: "Linked-List (0/49) > Singly LL",
     badge: "Singly Linked Lists & Async RTK Query",
     dsa: "Step 6.1–6.2: Singly Linked List (Foundations & Operations)",
     dsaDesc: "Linked List Node structure, Traversal, Length of LL, Search an Element, Insertion (at Head, Tail, Kth position), Deletion (Head, Tail, Kth position, by value).",
@@ -389,6 +400,7 @@ export const CURRICULUM_45_DAYS = {
   20: {
     dayNum: 20,
     dayName: "Day 20 (Saturday)",
+    striverFolder: "Linked-List (0/49) > Reversal & Middle",
     badge: "LL Reversal & React Router v6 Architecture",
     dsa: "Step 6.3: Linked Lists (Reversal & Middle Node)",
     dsaDesc: "Reverse a Singly Linked List (Iterative with 3 pointers: prev, curr, next & Recursive), Middle of the Linked List (Floyd's Tortoise and Hare algorithm: slow moves 1, fast moves 2).",
@@ -409,6 +421,7 @@ export const CURRICULUM_45_DAYS = {
   21: {
     dayNum: 21,
     dayName: "Day 21 (Sunday)",
+    striverFolder: "Linked-List (0/49) > Cycle Detection",
     badge: "LL Cycle Detection & Custom Hooks Architecture",
     dsa: "Step 6.3: Linked Lists (Cycle Detection & Starting Node)",
     dsaDesc: "Detect a Loop in Linked List (Floyd's Cycle Finding), Find the Starting Node of the Loop in LL (Reset slow to head), Length of Loop in Linked List.",
@@ -429,6 +442,7 @@ export const CURRICULUM_45_DAYS = {
   22: {
     dayNum: 22,
     dayName: "Day 22 (Monday)",
+    striverFolder: "Linked-List (0/49) > Hard Patterns",
     badge: "Linked Lists Hard & Node.js Architecture",
     dsa: "Step 6.4–6.5: Linked Lists (Hard Level Interview Patterns)",
     dsaDesc: "Check if LL is Palindrome (Find middle, reverse 2nd half, compare), Delete Nth Node from End (Two Pointers offset by N), Add Two Numbers represented as LLs, Reverse Nodes in K-Group.",
@@ -449,6 +463,7 @@ export const CURRICULUM_45_DAYS = {
   23: {
     dayNum: 23,
     dayName: "Day 23 (Tuesday)",
+    striverFolder: "Recursion (0/22) > Subsets & Combinations",
     badge: "Recursion & Backtracking + Node.js Streams",
     dsa: "Step 7: Recursion & Backtracking (Subsets & Combinations)",
     dsaDesc: "Subsets I & II (Power Set using Pick / Non-Pick recursion and avoiding duplicates), Combination Sum I (Infinite supply of candidate), Combination Sum II (Unique candidates).",
@@ -469,6 +484,7 @@ export const CURRICULUM_45_DAYS = {
   24: {
     dayNum: 24,
     dayName: "Day 24 (Wednesday)",
+    striverFolder: "Recursion (0/22) > Permutations & Backtracking",
     badge: "Backtracking Hard & Express.js Architecture",
     dsa: "Step 7: Advanced Backtracking (Permutations & N-Queens)",
     dsaDesc: "Generate Permutations of Array/String (In-place swap backtracking), N-Queens Problem (Place N non-attacking queens on NxN chessboard using row/col/diagonal hashing), Word Search.",
@@ -489,6 +505,7 @@ export const CURRICULUM_45_DAYS = {
   25: {
     dayNum: 25,
     dayName: "Day 25 (Thursday)",
+    striverFolder: "Stack / Queues (0/31) > Foundations & Min Stack",
     badge: "Stacks & Queues Basics + Express Middleware",
     dsa: "Step 9.1: Stacks & Queues (Foundations & Min Stack)",
     dsaDesc: "Stack & Queue implementation using Arrays & Linked Lists, Valid Parentheses (Matching brackets using Stack), Implement Queue using Stacks, Implement Min Stack with O(1) time and space.",
@@ -509,6 +526,7 @@ export const CURRICULUM_45_DAYS = {
   26: {
     dayNum: 26,
     dayName: "Day 26 (Friday)",
+    striverFolder: "Stack / Queues (0/31) > Monotonic Stack",
     badge: "Monotonic Stack & RESTful API Conventions",
     dsa: "Step 9.2: Monotonic Stack (Next Greater Element & Trapping Water)",
     dsaDesc: "Next Greater Element I (Monotonic Decreasing Stack), Next Greater Element II (Circular array using 2N-1 loop), Next Smaller Element, Trapping Rain Water (Two Pointers vs Stack approach).",
@@ -529,6 +547,7 @@ export const CURRICULUM_45_DAYS = {
   27: {
     dayNum: 27,
     dayName: "Day 27 (Saturday)",
+    striverFolder: "Stack / Queues (0/31) > Histograms & Asteroids",
     badge: "Monotonic Stack Hard & Request Validation (Zod)",
     dsa: "Step 9.3: Monotonic Stack (Histograms & Maximal Rectangle)",
     dsaDesc: "Largest Rectangle in Histogram (Find Previous Smaller & Next Smaller Elements in O(N)), Maximal Rectangle in Binary Matrix, Asteroid Collision, Sum of Subarray Minimums.",
@@ -549,6 +568,7 @@ export const CURRICULUM_45_DAYS = {
   28: {
     dayNum: 28,
     dayName: "Day 28 (Sunday)",
+    striverFolder: "Sliding Window / 2 Pointer (0/13) > Foundations",
     badge: "Sliding Window Basics & MongoDB Foundations",
     dsa: "Step 10: Sliding Window & Two Pointers (Foundations)",
     dsaDesc: "Sliding Window pattern: Constant Window vs Variable Window. Longest Substring Without Repeating Characters (Hash Map + Left pointer), Max Consecutive Ones III (At most K zeroes flipped), Fruit Into Baskets.",
@@ -569,6 +589,7 @@ export const CURRICULUM_45_DAYS = {
   29: {
     dayNum: 29,
     dayName: "Day 29 (Monday)",
+    striverFolder: "Sliding Window / 2 Pointer (0/13) > Hard Patterns",
     badge: "Sliding Window Hard & Mongoose CRUD Queries",
     dsa: "Step 10: Sliding Window (Hard Level Patterns)",
     dsaDesc: "Longest Repeating Character Replacement (Max frequency in window), Binary Subarrays with Given Sum (Prefix sum / Sliding window trick: atMost(K) - atMost(K-1)), Minimum Window Substring.",
@@ -589,6 +610,7 @@ export const CURRICULUM_45_DAYS = {
   30: {
     dayNum: 30,
     dayName: "Day 30 (Tuesday)",
+    striverFolder: "Heaps (0/20) > Foundations & Kth Element",
     badge: "Heaps & Priority Queues + Schema Relationships",
     dsa: "Step 11: Heaps / Priority Queues (Foundations & Kth Elements)",
     dsaDesc: "Min Heap and Max Heap binary tree representation, Heapify algorithm (O(N)), Kth Largest Element in an Array (Min Heap of size K), Sort a K-Sorted Array, Task Scheduler.",
@@ -609,6 +631,7 @@ export const CURRICULUM_45_DAYS = {
   31: {
     dayNum: 31,
     dayName: "Day 31 (Wednesday)",
+    striverFolder: "Heaps (0/20) > Stream Median & Merge K Lists",
     badge: "Heaps Hard & Mongoose Virtuals / Hooks",
     dsa: "Step 11: Heaps (Hard: Median of Stream & Merge K Lists)",
     dsaDesc: "Merge K Sorted Lists (Min Heap containing head nodes of all K lists), Find Median from Data Stream (Two Heaps pattern: Max Heap for smaller half, Min Heap for larger half).",
@@ -629,6 +652,7 @@ export const CURRICULUM_45_DAYS = {
   32: {
     dayNum: 32,
     dayName: "Day 32 (Thursday)",
+    striverFolder: "Binary Trees (0/32) > Traversals & BFS",
     badge: "Binary Trees Basics & MongoDB Indexing",
     dsa: "Step 13.1: Binary Trees (Traversals: Recursive & Iterative)",
     dsaDesc: "Binary Tree node representations, Preorder, Inorder, and Postorder Traversals (Both Recursive and Iterative using Stacks), Level Order Traversal (BFS using Queue).",
@@ -649,6 +673,7 @@ export const CURRICULUM_45_DAYS = {
   33: {
     dayNum: 33,
     dayName: "Day 33 (Friday)",
+    striverFolder: "Binary Trees (0/32) > Height & Diameter",
     badge: "Binary Trees Properties & Aggregation Pipeline",
     dsa: "Step 13.2: Binary Trees (Height, Diameter & Balanced)",
     dsaDesc: "Maximum Depth / Height of Binary Tree, Check if Binary Tree is Height-Balanced (O(N) bottom-up check), Diameter of Binary Tree (Longest path between any two nodes), Maximum Path Sum.",
@@ -669,6 +694,7 @@ export const CURRICULUM_45_DAYS = {
   34: {
     dayNum: 34,
     dayName: "Day 34 (Saturday)",
+    striverFolder: "Binary Trees (0/32) > Views & Boundary",
     badge: "Binary Trees Views & Advanced Aggregations ($lookup)",
     dsa: "Step 13.2: Binary Trees (Views & Boundary Traversals)",
     dsaDesc: "Boundary Traversal of Binary Tree (Anti-clockwise: Left boundary, Leaf nodes, Right boundary), Zig-Zag / Spiral Level Order Traversal, Top View of Binary Tree, Bottom View of Binary Tree (Vertical line hashing).",
@@ -689,6 +715,7 @@ export const CURRICULUM_45_DAYS = {
   35: {
     dayNum: 35,
     dayName: "Day 35 (Sunday)",
+    striverFolder: "Binary Trees (0/32) > LCA & Distance K",
     badge: "Binary Trees Hard (LCA) & Password Security (Bcrypt)",
     dsa: "Step 13.3: Binary Trees (LCA, Children Sum & Burn Tree)",
     dsaDesc: "Lowest Common Ancestor (LCA) in Binary Tree, Check for Children Sum Property, Nodes at Distance K in Binary Tree (Graph representation with parent pointers), Minimum Time to Burn Binary Tree.",
@@ -709,6 +736,7 @@ export const CURRICULUM_45_DAYS = {
   36: {
     dayNum: 36,
     dayName: "Day 36 (Monday)",
+    striverFolder: "Binary Search Trees (0/15) > Foundations & Validation",
     badge: "Binary Search Trees (BST) & JWT Architecture",
     dsa: "Step 14: Binary Search Trees (Foundations & Validations)",
     dsaDesc: "Binary Search Tree properties (left < root < right), Search in BST (O(H) logarithmic), Insert a Node in BST, Delete a Node in BST, Validate BST (Pass min and max allowable range), Kth Smallest/Largest in BST.",
@@ -729,6 +757,7 @@ export const CURRICULUM_45_DAYS = {
   37: {
     dayNum: 37,
     dayName: "Day 37 (Tuesday)",
+    striverFolder: "Binary Search Trees (0/15) > LCA & Successor",
     badge: "BST Advanced & Role-Based Access Control (RBAC)",
     dsa: "Step 14: BST Advanced (LCA, Successor & Construction)",
     dsaDesc: "Lowest Common Ancestor in BST (Use BST property to branch without searching whole tree), Construct BST from Preorder Traversal, Inorder Successor/Predecessor in BST, Two Sum IV in BST.",
@@ -749,6 +778,7 @@ export const CURRICULUM_45_DAYS = {
   38: {
     dayNum: 38,
     dayName: "Day 38 (Wednesday)",
+    striverFolder: "Graphs (0/46) > BFS & DFS Traversals",
     badge: "Graphs BFS/DFS & Backend Security Hardening",
     dsa: "Step 15.1–15.2: Graphs (Representations & Traversals)",
     dsaDesc: "Graph representations: Adjacency Matrix vs Adjacency List (Vector of lists), Breadth First Search (BFS using Queue and Visited array), Depth First Search (DFS using Recursion), Number of Provinces / Connected Components.",
@@ -769,6 +799,7 @@ export const CURRICULUM_45_DAYS = {
   39: {
     dayNum: 39,
     dayName: "Day 39 (Thursday)",
+    striverFolder: "Graphs (0/46) > Cycle Detection & Islands",
     badge: "Graph Cycle Detection & File Uploads (Multer/S3)",
     dsa: "Step 15.2: Graph Cycle Detection (Directed & Undirected)",
     dsaDesc: "Detect Cycle in Undirected Graph (BFS with {node, parent} queue & DFS), Detect Cycle in Directed Graph (DFS with pathVisited array / recursion stack tracking), Number of Islands (2D Grid BFS/DFS).",
@@ -789,6 +820,7 @@ export const CURRICULUM_45_DAYS = {
   40: {
     dayNum: 40,
     dayName: "Day 40 (Friday)",
+    striverFolder: "Graphs (0/46) > Topological Sort (DAG)",
     badge: "Topological Sort & In-Memory Caching (Redis)",
     dsa: "Step 15.3: Topological Sorting & DAGs (Kahn's Algorithm)",
     dsaDesc: "Topological Sort in Directed Acyclic Graph (DAG) using DFS, Kahn's Algorithm (BFS using in-degree array), Course Schedule I & II (Cycle detection in DAG via Topological Sort).",
@@ -809,6 +841,7 @@ export const CURRICULUM_45_DAYS = {
   41: {
     dayNum: 41,
     dayName: "Day 41 (Saturday)",
+    striverFolder: "Graphs (0/46) > Shortest Path (Dijkstra)",
     badge: "Shortest Path (Dijkstra) & Real-Time WebSockets",
     dsa: "Step 15.4: Shortest Path Algorithms (Dijkstra's Algorithm)",
     dsaDesc: "Shortest Path in Undirected Graph with Unit Weights (BFS), Shortest Path in DAG (Topological Sort + Relaxation), Dijkstra's Algorithm (Priority Queue / Min Heap for non-negative weighted graphs in O(E log V)).",
@@ -829,6 +862,7 @@ export const CURRICULUM_45_DAYS = {
   42: {
     dayNum: 42,
     dayName: "Day 42 (Sunday)",
+    striverFolder: "Dynamic Programming (0/53) > 1D DP",
     badge: "Dynamic Programming Foundations & Next.js SSR",
     dsa: "Step 16.1–16.2: Dynamic Programming (Foundations & 1D DP)",
     dsaDesc: "Introduction to Dynamic Programming: Overlapping Subproblems & Optimal Substructure, Top-Down (Memoization) vs Bottom-Up (Tabulation), Climbing Stairs, Frog Jump with K steps, House Robber I & II (Circular houses).",
@@ -849,6 +883,7 @@ export const CURRICULUM_45_DAYS = {
   43: {
     dayNum: 43,
     dayName: "Day 43 (Monday)",
+    striverFolder: "Dynamic Programming (0/53) > Grid DP & 0/1 Knapsack",
     badge: "Grid DP, 0/1 Knapsack & Docker Architecture",
     dsa: "Step 16.3–16.4: DP on Grids & Subsequences (Knapsack)",
     dsaDesc: "Grid DP: Unique Paths (Grid combinatorics / DP), Minimum Path Sum in Grid, Subset Sum Equal to Target, Partition Equal Subset Sum, 0/1 Knapsack Problem, Coin Change (Minimum coins).",
@@ -869,6 +904,7 @@ export const CURRICULUM_45_DAYS = {
   44: {
     dayNum: 44,
     dayName: "Day 44 (Tuesday)",
+    striverFolder: "Dynamic Programming (0/53) > DP on Strings (LCS)",
     badge: "DP on Strings/Stocks & System Design (MERN)",
     dsa: "Step 16.5–16.7: DP on Strings & Stock Trading",
     dsaDesc: "Longest Common Subsequence (LCS: Striver Classic), Longest Palindromic Subsequence, Edit Distance (Insert, Delete, Replace in O(M*N)), Best Time to Buy and Sell Stock III & IV (At most K transactions).",
@@ -889,6 +925,7 @@ export const CURRICULUM_45_DAYS = {
   45: {
     dayNum: 45,
     dayName: "Day 45 (Wednesday)",
+    striverFolder: "Top Striver Patterns & Mock Interview Defense",
     badge: "Comprehensive Interview Mock & Capstone Defense",
     dsa: "Comprehensive DSA Mock Interview: Top 5 LeetCode Patterns",
     dsaDesc: "Simulated 45-min technical coding round: Two Pointers, Monotonic Stack, Binary Search on Answers, Tree LCA, and 1D/Knapsack DP. Explaining Big-O Time & Space complexity aloud.",

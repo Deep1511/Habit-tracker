@@ -47,6 +47,7 @@ import MorningSession from "./components/MorningSession";
 import MasterSchedule24H from "./components/MasterSchedule24H";
 import NaukriProManager from "./components/NaukriProManager";
 import StickyNotesStudioModal from "./components/StickyNotesStudioModal";
+import AdaptiveTopicModal from "./components/AdaptiveTopicModal";
 
 export default function App() {
   const cachedSettings = getLocalCache("settings", {});
@@ -97,6 +98,14 @@ export default function App() {
   const [showBooks, setShowBooks] = useState(false);
   const [showMentalVault, setShowMentalVault] = useState(false);
   const [showStickyNotesModal, setShowStickyNotesModal] = useState(false);
+  const [showAdaptiveTopicModal, setShowAdaptiveTopicModal] = useState(false);
+  const [curriculumVersion, setCurriculumVersion] = useState(0);
+
+  useEffect(() => {
+    const handleCurriculumUpdate = () => setCurriculumVersion((v) => v + 1);
+    window.addEventListener("curriculum_updated", handleCurriculumUpdate);
+    return () => window.removeEventListener("curriculum_updated", handleCurriculumUpdate);
+  }, []);
   const [showBedtimeSummary, setShowBedtimeSummary] = useState(false);
   const [showTimeline, setShowTimeline] = useState(true);
   const [todayMission, setTodayMission] = useState(() => {
@@ -521,7 +530,10 @@ export default function App() {
   const todaySched = targetDate
     ? getSchedule(todayStr, targetDate, use24HourMasterSchedule ? "master24h" : null)
     : null;
-  const todayTopic = getTopicForDay(todayStr, startDate);
+  const todayTopic = useMemo(
+    () => getTopicForDay(todayStr, startDate),
+    [todayStr, startDate, curriculumVersion]
+  );
 
   return (
     <>
@@ -951,6 +963,7 @@ export default function App() {
               onOpenDetox={() => setMainDashboardTab("detox")}
               onOpenNaukri={() => setMainDashboardTab("naukri")}
               onOpenStickyNotes={() => setShowStickyNotesModal(true)}
+              onOpenAdaptiveTopic={() => setShowAdaptiveTopicModal(true)}
               isTomorrow={isTomorrowActive}
               displayDateStr={activeDateStr}
               onSwitchDate={(toTomorrow) => setActiveDateStr(toTomorrow ? tomorrowStr : actualTodayStr)}
@@ -1332,6 +1345,15 @@ export default function App() {
           showToast={showToast}
         />
       )}
+
+      {/* ADAPTIVE STUDY PROGRESS & TOPIC SHIFT MODAL */}
+      <AdaptiveTopicModal
+        isOpen={showAdaptiveTopicModal}
+        onClose={() => setShowAdaptiveTopicModal(false)}
+        dateStr={todayStr}
+        currentTopic={todayTopic}
+        showToast={showToast}
+      />
 
       {/* BEDTIME WHOLE DAY SUMMARY & TOMORROW'S PLAN MODAL */}
       <BedtimeSummaryModal

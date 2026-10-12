@@ -1252,8 +1252,59 @@ function isBeforeTarget(dateStr, targetDate) {
 
 export { CURRICULUM_45_DAYS };
 
+export function getTopicOverrides() {
+  try {
+    const raw = localStorage.getItem("dsa_topic_overrides");
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function saveTopicOverride(dateStr, overrideData) {
+  try {
+    const overrides = getTopicOverrides();
+    if (overrideData === null) {
+      delete overrides[dateStr];
+    } else {
+      overrides[dateStr] = { ...(overrides[dateStr] || {}), ...overrideData };
+    }
+    localStorage.setItem("dsa_topic_overrides", JSON.stringify(overrides));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("curriculum_updated"));
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+export function getCurriculumOffset() {
+  try {
+    return parseInt(localStorage.getItem("curriculum_day_offset") || "0", 10);
+  } catch {
+    return 0;
+  }
+}
+
+export function setCurriculumOffset(offset) {
+  try {
+    localStorage.setItem("curriculum_day_offset", String(offset));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("curriculum_updated"));
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
 export function getTopicForDay(dateStr, startDate = "2026-10-12") {
   if (!dateStr) return CURRICULUM_45_DAYS[1];
+
+  const overrides = getTopicOverrides();
+  const dateOverride = overrides[dateStr];
+  const offset = getCurriculumOffset();
+
+  let dayNum = 1;
   try {
     const curParts = dateStr.split("-").map(Number);
     const startParts = startDate.split("-").map(Number);
@@ -1261,18 +1312,36 @@ export function getTopicForDay(dateStr, startDate = "2026-10-12") {
     const stDate = new Date(startParts[0], startParts[1] - 1, startParts[2]);
     const diffTime = curDate.getTime() - stDate.getTime();
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    const dayNum = Math.max(1, diffDays + 1);
-
-    if (CURRICULUM_45_DAYS[dayNum]) {
-      return CURRICULUM_45_DAYS[dayNum];
-    }
-    const modDay = ((dayNum - 1) % 45) + 1;
-    return CURRICULUM_45_DAYS[modDay] || CURRICULUM_45_DAYS[1];
+    
+    // Day calculation with curriculum offset:
+    // If user pushed today's topic, future days shift by -offset so tomorrow gets today's topic
+    dayNum = Math.max(1, diffDays + 1 - offset);
   } catch {
-    const d = parseDate(dateStr);
-    const dayOfWeek = d.getDay();
-    return DAY_TOPICS[dayOfWeek] || CURRICULUM_45_DAYS[1];
+    dayNum = 1;
   }
+
+  const baseTopic = CURRICULUM_45_DAYS[dayNum] || CURRICULUM_45_DAYS[((dayNum - 1) % 45) + 1] || CURRICULUM_45_DAYS[1];
+
+  // If user recorded actual custom study on this date:
+  if (dateOverride && (dateOverride.actualDsa || dateOverride.actualNotes)) {
+    return {
+      ...baseTopic,
+      isCustomLogged: true,
+      originalDsa: baseTopic.dsa,
+      originalCoreProblem: baseTopic.coreProblem,
+      actualDsa: dateOverride.actualDsa,
+      actualNotes: dateOverride.actualNotes,
+      pushedScheduledToTomorrow: !!dateOverride.pushedScheduledToTomorrow,
+      striverFolder: dateOverride.actualFolder || baseTopic.striverFolder,
+      dsa: dateOverride.actualDsa ? `✅ Actually Studied: ${dateOverride.actualDsa}` : baseTopic.dsa,
+      dsaDesc: dateOverride.actualNotes
+        ? `Notes / iPad Tracing: ${dateOverride.actualNotes}`
+        : `Completed custom session: ${dateOverride.actualDsa}`,
+      coreProblem: dateOverride.actualDsa || baseTopic.coreProblem,
+    };
+  }
+
+  return baseTopic;
 }
 
 export function getBrainFreshupForDay(dateStr) {
